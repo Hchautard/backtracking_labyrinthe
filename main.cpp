@@ -13,5 +13,12 @@ int main()
 
     cout << "Nombre de labyrinthes : " << labyrinthes.size() << endl;
 
+    // Affichage de chaque labyrinthe
+    for (size_t i = 0; i < labyrinthes.size(); ++i) {
+        cout << "Labyrinthe " << i + 1 << ":" << endl;
+        labyrinthes[i].afficherLabyrinthe();
+        cout << endl;
+    }
+
     return 0;
 }

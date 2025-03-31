@@ -20,6 +20,12 @@ class Labyrinthe {
         
         static std::vector<Labyrinthe> loadFile(const string& nomFichier);
 
+        void afficherLabyrinthe() const {
+            for (const auto& ligne : grille) {
+                cout << ligne << endl;
+            }
+        }
+
 };
 
 #endif
