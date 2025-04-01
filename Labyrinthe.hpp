@@ -1,56 +1,71 @@
-#ifndef LARBYRINTHE_HPP
-#define LARBYRINTHE_HPP
+#ifndef LABYRINTHE_MULTI_HPP
+#define LABYRINTHE_MULTI_HPP
+
 #include <iostream>
 #include <vector>
 #include <string>
+#include <set>
+#include <tuple>
+#include <algorithm>
 
 using namespace std;
 
 class Labyrinthe {
+private:
+    // Structure pour représenter le labyrinthe complet avec tous les niveaux
+    vector<vector<string>> niveaux;  // Chaque niveau est une grille
+    int largeur;
+    int hauteur;
+    int nbNiveaux;
 
-    private:
-        vector<string> grille;
-        int largeur;
-        int hauteur;
+    // Positions importantes
+    vector<pair<int, int>> positionsTeleporteurs1;  // Positions des téléporteurs 1 pour chaque niveau
+    vector<pair<int, int>> positionsTeleporteurs2;  // Positions des téléporteurs 2 pour chaque niveau
+    vector<pair<int, int>> positionsDynamite;       // Positions des dynamites T pour chaque niveau
 
-    public :
-        Labyrinthe();
-        Labyrinthe(const vector<string>& grille);
-        // ~Labyrinthe();
-        
-        static std::vector<Labyrinthe> loadFile(const string& nomFichier);
+    // Backtracking pour explorer le labyrinthe
+    bool backtrackingMultiNiveau(
+        int x, int y, int niveau,
+        vector<pair<int, int>>& objetsCollectes,
+        vector<tuple<int, int, int>>& chemin,
+        set<tuple<int, int, int>>& visite,
+        bool murExplose
+    );
 
-        void afficherLabyrinthe() const;
+    // Fonctions helper
+    bool tousObjetsCollectes(const vector<pair<int, int>>& objetsCollectes) const;
+    bool contientPosition(const vector<pair<int, int>>& positions, int x, int y) const;
+    vector<pair<int, int>> getVoisinsAccessibles(int x, int y, int niveau, bool murExplose) const;
 
-        // Getters
-        int getLargeur() const { return largeur; }
-        int getHauteur() const { return hauteur; }
-        const vector<string>& getGrille() const { return grille; }
-        pair<int, int> getDepart() const { return positionDepart; }
-        pair<int, int> getArrivee() const { return positionArrivee; }
-        vector<pair<int, int>> getObjets() const { return positionsObjets; }
+public:
+    Labyrinthe();
+    Labyrinthe(const vector<vector<string>>& niveaux);
 
-        // Setters
-        void setLargeur(int largeur) { this->largeur = largeur; }
-        void setHauteur(int hauteur) { this->hauteur = hauteur; }
-        void setGrille(const vector<string>& grille) { this->grille = grille; }
+    // Chargement des labyrinthes depuis un fichier
+    static Labyrinthe loadFile(const string& nomFichier);
 
-        // Positions
-        pair<int, int> positionDepart;
-        pair<int, int> positionArrivee;
-        vector<pair<int, int>> positionsObjets;
-        
-        // Initialisation des positions
-        void initPositions();
+    // Affichage
+    void afficherLabyrinthe() const;
+    void afficherLabyrintheAvecChemin(const vector<tuple<int, int, int>>& chemin) const;
 
-        // Méthodes utilitaires
-        bool isValidPosition(int x, int y) const;
-        bool isWall(int x, int y) const;
-        char getCase(int x, int y) const;
-        char getCase(const pair<int, int>& position) const;
-        bool isObject(int x, int y) const;
+    // Positions de départ et d'arrivée
+    pair<int, int> positionDepart;
+    int niveauDepart;
+    pair<int, int> positionArrivee;
+    int niveauArrivee;
+    vector<tuple<int, int, int>> positionsObjets;  // (x, y, niveau)
 
+    // Initialisation des positions
+    void initPositions();
 
+    // Méthodes utilitaires
+    bool isValidPosition(int x, int y, int niveau) const;
+    bool isWall(int x, int y, int niveau) const;
+    char getCase(int x, int y, int niveau) const;
+    bool isObject(int x, int y, int niveau) const;
+
+    // Résolution du labyrinthe
+    vector<tuple<int, int, int>> resolve();  // Retourne un chemin: (x, y, niveau)
 };
 
 #endif
