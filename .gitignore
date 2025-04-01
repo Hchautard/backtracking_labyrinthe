@@ -1,3 +1,7 @@
 *.exe
 *.o
 .vscode
+symcache
+dynamorio
+DrMemory-labyrinthe.*
+resfile.*

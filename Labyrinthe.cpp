@@ -10,6 +10,12 @@ using namespace std;
 
 Labyrinthe::Labyrinthe() : largeur(0), hauteur(0) {}
 
+void Labyrinthe::afficherLabyrinthe() const {
+    for (const auto& ligne : grille) {
+        std::cout << ligne << std::endl;
+    }
+}
+
 // Création avec une liste d'initialisation
 Labyrinthe::Labyrinthe(const vector<string>& _grille) : grille(_grille) {
     if (!grille.empty()) {
@@ -63,4 +69,61 @@ vector<Labyrinthe> Labyrinthe::loadFile(const string &nomFichier)
 
     fichier.close();
     return labyrinthes;
+}
+
+// Initialise les positions (départ, arrivée, objets)
+void Labyrinthe::initPositions() {
+
+    for (int y = 0; y < hauteur; ++y) {
+        for (int x = 0; x < largeur; ++x) {
+            char c = grille[y][x];
+            
+            if (c == 'D') {
+                positionDepart = make_pair(x, y);
+            } else if (c == 'A') {
+                positionArrivee = make_pair(x, y);
+            } else if (c == 'C' || c == 'B' || c == 'E') {
+                // C = Couronne, B = Bouclier, E = Épée
+                positionsObjets.push_back(make_pair(x, y));
+            }
+        }
+    }
+}
+
+// Récupère la case depuis des coordonnées
+char Labyrinthe::getCase(const pair<int, int>& position) const {
+    return getCase(position.first, position.second);
+}
+
+// Récupère la case
+char Labyrinthe::getCase(int x, int y) const {
+    if (isValidPosition(x, y)) {
+        return grille[y][x];
+    }
+    return ' '; 
+}
+
+// Vérifie si la position
+bool Labyrinthe::isValidPosition(int x, int y) const {
+
+    if(x >= 0 && x < largeur && y >= 0 && y < hauteur) {
+        return true;
+    }
+
+    return false;
+}
+
+// Vérifie si c'est un mur
+bool Labyrinthe::isWall(int x, int y) const {
+    if (!isValidPosition(x, y)) {
+        return true;
+    }
+    return grille[y][x] == '#';
+}
+
+// Vérifie si c'est un objet
+bool Labyrinthe::isObject(int x, int y) const {
+    if (!isValidPosition(x, y)) return false;
+    char c = grille[y][x];
+    return (c == 'C' || c == 'B' || c == 'E');
 }
