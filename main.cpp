@@ -1,52 +1,39 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
-#include <chrono>
-#include <iomanip>
 #include "Labyrinthe.hpp"
 
-using namespace std;
-
 int main() {
-    // Chargement du labyrinthe depuis un fichier
-    string nomFichier = "labyrinthe.txt";
+    // Chargement des labyrinthes à partir du fichier avec la méthode statique loadFile
+    std::vector<Labyrinthe> labyrinthes = Labyrinthe::loadFile("labyrinthe.txt");
     
-    try {
-        Labyrinthe labyrinthe = Labyrinthe::loadFile(nomFichier);
+    // Afficher chaque labyrinthe
+    for (size_t i = 0; i < labyrinthes.size(); ++i) {
+        std::cout << "Labyrinthe " << (i + 1) << ":" << std::endl;
+        labyrinthes[i].afficher();
         
-        cout << "\n======== Labyrinthe chargé ========" << endl;
-        labyrinthe.afficherLabyrinthe();
+        // Afficher les positions spéciales
+        auto depart = labyrinthes[i].getPositionDepart();
+        auto arrivee = labyrinthes[i].getPositionArrivee();
+        auto epee = labyrinthes[i].getPositionEpee();
+        auto bouclier = labyrinthes[i].getPositionBouclier();
+        auto couronne = labyrinthes[i].getPositionCouronne();
+        auto porte1 = labyrinthes[i].getPositionPorte1();
+        auto porte2 = labyrinthes[i].getPositionPorte2();
+        auto tnt = labyrinthes[i].getPositionTNT();
         
-        cout << "\nRecherche d'un chemin..." << endl;
+        std::cout << "Positions spéciales:" << std::endl;
+        std::cout << "  Départ (D): (" << depart.first << ", " << depart.second << ")" << std::endl;
+        std::cout << "  Arrivée (A): (" << arrivee.first << ", " << arrivee.second << ")" << std::endl;
+        std::cout << "  Épée (E): (" << epee.first << ", " << epee.second << ")" << std::endl;
+        std::cout << "  Bouclier (B): (" << bouclier.first << ", " << bouclier.second << ")" << std::endl;
+        std::cout << "  Couronne (C): (" << couronne.first << ", " << couronne.second << ")" << std::endl;
+        std::cout << "  Porte 1: (" << porte1.first << ", " << porte1.second << ")" << std::endl;
+        std::cout << "  Porte 2: (" << porte2.first << ", " << porte2.second << ")" << std::endl;
+        std::cout << "  TNT (T): (" << tnt.first << ", " << tnt.second << ")" << std::endl;
         
-        // Mesurer le temps d'exécution
-        auto debut = chrono::high_resolution_clock::now();
-        vector<tuple<int, int, int>> chemin = labyrinthe.resolve();
-        auto fin = chrono::high_resolution_clock::now();
-        auto duree = chrono::duration_cast<chrono::milliseconds>(fin - debut);
-        
-        cout << "Temps d'exécution: " << duree.count() << " ms" << endl;
-        
-        if (chemin.empty()) {
-            cout << "Aucun chemin valide n'a été trouvé!" << endl;
-        } else {
-            cout << "Chemin trouvé! Longueur: " << chemin.size() << " pas" << endl;
-            labyrinthe.afficherLabyrintheAvecChemin(chemin);
-            
-            // Afficher le chemin détaillé
-            cout << "Détail du chemin:" << endl;
-            for (size_t i = 0; i < chemin.size(); ++i) {
-                int x = get<0>(chemin[i]);
-                int y = get<1>(chemin[i]);
-                int niveau = get<2>(chemin[i]);
-                char c = labyrinthe.getCase(x, y, niveau);
-                
-                cout << i + 1 << ": (" << x << "," << y << ") niveau " << niveau << " - " << c << endl;
-            }
-        }
-    } catch (const exception& e) {
-        cerr << "Erreur: " << e.what() << endl;
-        return 1;
+        std::cout << std::endl;
     }
     
     return 0;

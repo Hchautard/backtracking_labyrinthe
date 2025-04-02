@@ -1,71 +1,66 @@
-#ifndef LABYRINTHE_MULTI_HPP
-#define LABYRINTHE_MULTI_HPP
+#ifndef LABYRINTHE_HPP
+#define LABYRINTHE_HPP
 
-#include <iostream>
 #include <vector>
 #include <string>
-#include <set>
-#include <tuple>
-#include <algorithm>
-
-using namespace std;
+#include <utility> // pour std::pair
 
 class Labyrinthe {
 private:
-    // Structure pour représenter le labyrinthe complet avec tous les niveaux
-    vector<vector<string>> niveaux;  // Chaque niveau est une grille
+    std::vector<std::string> grille;
     int largeur;
     int hauteur;
-    int nbNiveaux;
-
-    // Positions importantes
-    vector<pair<int, int>> positionsTeleporteurs1;  // Positions des téléporteurs 1 pour chaque niveau
-    vector<pair<int, int>> positionsTeleporteurs2;  // Positions des téléporteurs 2 pour chaque niveau
-    vector<pair<int, int>> positionsDynamite;       // Positions des dynamites T pour chaque niveau
-
-    // Backtracking pour explorer le labyrinthe
-    bool backtrackingMultiNiveau(
-        int x, int y, int niveau,
-        vector<pair<int, int>>& objetsCollectes,
-        vector<tuple<int, int, int>>& chemin,
-        set<tuple<int, int, int>>& visite,
-        bool murExplose
-    );
-
-    // Fonctions helper
-    bool tousObjetsCollectes(const vector<pair<int, int>>& objetsCollectes) const;
-    bool contientPosition(const vector<pair<int, int>>& positions, int x, int y) const;
-    vector<pair<int, int>> getVoisinsAccessibles(int x, int y, int niveau, bool murExplose) const;
+    std::pair<int, int> positionDepart; // Position D
+    std::pair<int, int> positionArrivee; // Position A
+    std::pair<int, int> positionEpee;    // Position E
+    std::pair<int, int> positionBouclier; // Position B
+    std::pair<int, int> positionCouronne; // Position C
+    std::pair<int, int> positionPorte1;   // Position 1 (entrée/sortie)
+    std::pair<int, int> positionPorte2;   // Position 2 (entrée/sortie)
+    std::pair<int, int> positionTNT;      // Position T (TNT)
 
 public:
+    // Constructeur par défaut
     Labyrinthe();
-    Labyrinthe(const vector<vector<string>>& niveaux);
-
-    // Chargement des labyrinthes depuis un fichier
-    static Labyrinthe loadFile(const string& nomFichier);
-
-    // Affichage
-    void afficherLabyrinthe() const;
-    void afficherLabyrintheAvecChemin(const vector<tuple<int, int, int>>& chemin) const;
-
-    // Positions de départ et d'arrivée
-    pair<int, int> positionDepart;
-    int niveauDepart;
-    pair<int, int> positionArrivee;
-    int niveauArrivee;
-    vector<tuple<int, int, int>> positionsObjets;  // (x, y, niveau)
-
-    // Initialisation des positions
-    void initPositions();
-
-    // Méthodes utilitaires
-    bool isValidPosition(int x, int y, int niveau) const;
-    bool isWall(int x, int y, int niveau) const;
-    char getCase(int x, int y, int niveau) const;
-    bool isObject(int x, int y, int niveau) const;
-
-    // Résolution du labyrinthe
-    vector<tuple<int, int, int>> resolve();  // Retourne un chemin: (x, y, niveau)
+    
+    // Constructeur avec une grille
+    Labyrinthe(const std::vector<std::string>& grilleLabyrinthe);
+    
+    // Accesseurs
+    int getLargeur() const;
+    int getHauteur() const;
+    char getCase(int x, int y) const;
+    std::pair<int, int> getPositionDepart() const;
+    std::pair<int, int> getPositionArrivee() const;
+    std::pair<int, int> getPositionEpee() const;
+    std::pair<int, int> getPositionBouclier() const;
+    std::pair<int, int> getPositionCouronne() const;
+    std::pair<int, int> getPositionPorte1() const;
+    std::pair<int, int> getPositionPorte2() const;
+    std::pair<int, int> getPositionTNT() const;
+    
+    // Modificateurs
+    void setCase(int x, int y, char valeur);
+    
+    // Méthodes pour charger et afficher le labyrinthe
+    bool chargerDepuisFichier(const std::string& nomFichier);
+    void afficher() const;
+    
+    // Méthode pour charger plusieurs labyrinthes depuis un fichier
+    static std::vector<Labyrinthe> loadFile(const std::string& nomFichier);
+    
+    // Méthodes de validation
+    bool estPositionValide(int x, int y) const;
+    bool estMur(int x, int y) const;
+    
+    // Méthode pour gérer l'explosion de TNT
+    void exploserTNT();
+    
+    // Méthode pour gérer les transitions entre labyrinthes
+    std::pair<int, int> getNextStartPosition(char currentPosition) const;
+    
+    // Méthodes pour trouver et initialiser les positions spéciales
+    void trouverPositionsSpeciales();
 };
 
-#endif
+#endif // LABYRINTHE_HPP
