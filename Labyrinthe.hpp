@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <string>
-#include <utility> // pour std::pair
+#include <utility> 
 
 class Labyrinthe {
 private:
@@ -18,6 +18,14 @@ private:
     std::pair<int, int> positionPorte1;   // Position 1 (entrée/sortie)
     std::pair<int, int> positionPorte2;   // Position 2 (entrée/sortie)
     std::pair<int, int> positionTNT;      // Position T (TNT)
+    
+    // Méthode pour trouver et initialiser les positions spéciales
+    void trouverPositionsSpeciales();
+    
+    // Méthode interne de backtracking récursif
+    bool backtrackingSequentiel(int x, int y, int finX, int finY, 
+                              std::vector<std::vector<bool>>& visite, 
+                              std::vector<std::pair<int, int>>& chemin);
 
 public:
     // Constructeur par défaut
@@ -26,7 +34,7 @@ public:
     // Constructeur avec une grille
     Labyrinthe(const std::vector<std::string>& grilleLabyrinthe);
     
-    // Accesseurs
+    // Getters
     int getLargeur() const;
     int getHauteur() const;
     char getCase(int x, int y) const;
@@ -39,12 +47,12 @@ public:
     std::pair<int, int> getPositionPorte2() const;
     std::pair<int, int> getPositionTNT() const;
     
-    // Modificateurs
+    // Setters
     void setCase(int x, int y, char valeur);
     
     // Méthodes pour charger et afficher le labyrinthe
-    bool chargerDepuisFichier(const std::string& nomFichier);
     void afficher() const;
+    void afficherAvecChemin(const std::vector<std::pair<int, int>>& chemin) const;
     
     // Méthode pour charger plusieurs labyrinthes depuis un fichier
     static std::vector<Labyrinthe> loadFile(const std::string& nomFichier);
@@ -53,14 +61,12 @@ public:
     bool estPositionValide(int x, int y) const;
     bool estMur(int x, int y) const;
     
-    // Méthode pour gérer l'explosion de TNT
-    void exploserTNT();
+    // Méthode principale de résolution du chemin
+    bool trouverChemin(std::pair<int, int> debut, std::pair<int, int> fin, 
+                     std::vector<std::pair<int, int>>& chemin);
     
-    // Méthode pour gérer les transitions entre labyrinthes
-    std::pair<int, int> getNextStartPosition(char currentPosition) const;
-    
-    // Méthodes pour trouver et initialiser les positions spéciales
-    void trouverPositionsSpeciales();
+    // Méthode pour résoudre le labyrinthe 1 (D → E → 1)
+    bool resoudreLabyrinthe1(std::vector<std::pair<int, int>>& chemin);
 };
 
 #endif // LABYRINTHE_HPP

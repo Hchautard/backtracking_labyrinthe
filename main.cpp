@@ -5,35 +5,37 @@
 #include "Labyrinthe.hpp"
 
 int main() {
-    // Chargement des labyrinthes à partir du fichier avec la méthode statique loadFile
+    // Chargement des labyrinthes à partir du fichier
     std::vector<Labyrinthe> labyrinthes = Labyrinthe::loadFile("labyrinthe.txt");
     
-    // Afficher chaque labyrinthe
-    for (size_t i = 0; i < labyrinthes.size(); ++i) {
-        std::cout << "Labyrinthe " << (i + 1) << ":" << std::endl;
-        labyrinthes[i].afficher();
+    if (labyrinthes.empty()) {
+        std::cerr << "Aucun labyrinthe chargé." << std::endl;
+        return 1;
+    }
+    
+    // Nous ne traitons que le premier labyrinthe
+    if (labyrinthes.size() >= 1) {
+        std::cout << "Résolution du labyrinthe 1 (D → E → 1):" << std::endl;
         
-        // Afficher les positions spéciales
-        auto depart = labyrinthes[i].getPositionDepart();
-        auto arrivee = labyrinthes[i].getPositionArrivee();
-        auto epee = labyrinthes[i].getPositionEpee();
-        auto bouclier = labyrinthes[i].getPositionBouclier();
-        auto couronne = labyrinthes[i].getPositionCouronne();
-        auto porte1 = labyrinthes[i].getPositionPorte1();
-        auto porte2 = labyrinthes[i].getPositionPorte2();
-        auto tnt = labyrinthes[i].getPositionTNT();
+        Labyrinthe& labyrinthe = labyrinthes[0];
         
-        std::cout << "Positions spéciales:" << std::endl;
-        std::cout << "  Départ (D): (" << depart.first << ", " << depart.second << ")" << std::endl;
-        std::cout << "  Arrivée (A): (" << arrivee.first << ", " << arrivee.second << ")" << std::endl;
-        std::cout << "  Épée (E): (" << epee.first << ", " << epee.second << ")" << std::endl;
-        std::cout << "  Bouclier (B): (" << bouclier.first << ", " << bouclier.second << ")" << std::endl;
-        std::cout << "  Couronne (C): (" << couronne.first << ", " << couronne.second << ")" << std::endl;
-        std::cout << "  Porte 1: (" << porte1.first << ", " << porte1.second << ")" << std::endl;
-        std::cout << "  Porte 2: (" << porte2.first << ", " << porte2.second << ")" << std::endl;
-        std::cout << "  TNT (T): (" << tnt.first << ", " << tnt.second << ")" << std::endl;
-        
+        // Afficher le labyrinthe original
+        std::cout << "Labyrinthe original:" << std::endl;
+        labyrinthe.afficher();
         std::cout << std::endl;
+        
+        // Résoudre le labyrinthe 1 en allant de D à 1 en passant par l'épée
+        std::vector<std::pair<int, int>> chemin;
+        bool cheminTrouve = labyrinthe.resoudreLabyrinthe1(chemin);
+        
+        if (cheminTrouve) {
+            std::cout << "Chemin trouvé de D à 1 en passant par l'épée!" << std::endl;
+            std::cout << "Longueur du chemin: " << chemin.size() << " cases" << std::endl;
+            std::cout << "Affichage du labyrinthe avec le chemin (carrés verts):" << std::endl;
+            labyrinthe.afficherAvecChemin(chemin);
+        } else {
+            std::cout << "Aucun chemin n'a pu être trouvé de D à 1 en passant par l'épée." << std::endl;
+        }
     }
     
     return 0;
