@@ -2,6 +2,13 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <set>
+
+using namespace std;
+
+// Couleur 
+const std::string RESET = "\033[0m"; 
+const std::string VERT = "\033[32m";
 
 // Constructeur par défaut
 Labyrinthe::Labyrinthe() : largeur(0), hauteur(0) {
@@ -15,8 +22,24 @@ Labyrinthe::Labyrinthe() : largeur(0), hauteur(0) {
     positionTNT = std::make_pair(-1, -1);
 }
 
-// Constructeur avec une grille
-Labyrinthe::Labyrinthe(const std::vector<std::string>& grilleLabyrinthe) : grille(grilleLabyrinthe) {
+// Constructeur avec un vecteur de chaînes (pour compatibilité)
+Labyrinthe::Labyrinthe(const std::vector<std::string>& grilleLabyrinthe) {
+    hauteur = grilleLabyrinthe.size();
+    largeur = hauteur > 0 ? grilleLabyrinthe[0].size() : 0;
+    
+    // Convertir le vecteur de chaînes en matrice 2D
+    grille.resize(hauteur, std::vector<char>(largeur));
+    for (int y = 0; y < hauteur; ++y) {
+        for (int x = 0; x < largeur; ++x) {
+            grille[y][x] = grilleLabyrinthe[y][x];
+        }
+    }
+    
+    trouverPositionsSpeciales();
+}
+
+// Constructeur avec une matrice 2D (nouveau)
+Labyrinthe::Labyrinthe(const std::vector<std::vector<char>>& grilleMatrice) : grille(grilleMatrice) {
     hauteur = grille.size();
     largeur = hauteur > 0 ? grille[0].size() : 0;
     trouverPositionsSpeciales();
@@ -78,31 +101,40 @@ void Labyrinthe::setCase(int x, int y, char valeur) {
 }
 
 void Labyrinthe::afficher() const {
-    for (const auto& ligne : grille) {
-        std::cout << ligne << std::endl;
+    for (int y = 0; y < hauteur; ++y) {
+        for (int x = 0; x < largeur; ++x) {
+            std::cout << grille[y][x];
+        }
+        std::cout << std::endl;
     }
 }
 
 void Labyrinthe::afficherAvecChemin(const std::vector<std::pair<int, int>>& chemin) const {
-    // Créer une copie temporaire de la grille pour afficher le chemin
-    std::vector<std::string> grilleTemp = grille;
+    // Définition des codes ANSI pour les couleurs
+    const std::string RESET = "\033[0m";
+    const std::string VERT = "\033[32m";
     
-    // Marquer le chemin avec le caractère '*'
+    // Créer un ensemble pour une recherche plus rapide des positions du chemin
+    std::set<std::pair<int, int>> positionsChemin;
     for (const auto& pos : chemin) {
-        int x = pos.first;
-        int y = pos.second;
-        if (estPositionValide(x, y)) {
-            // Préserver D, E et 1 sur le chemin mais marquer les autres cases
-            char c = grilleTemp[y][x];
-            if (c != 'D' && c != 'E' && c != '1') {
-                grilleTemp[y][x] = '*';
-            }
-        }
+        positionsChemin.insert(pos);
     }
     
-    // Afficher la grille avec le chemin
-    for (const auto& ligne : grilleTemp) {
-        std::cout << ligne << std::endl;
+    // Afficher la grille avec le chemin en vert
+    for (int y = 0; y < hauteur; ++y) {
+        for (int x = 0; x < largeur; ++x) {
+            char c = grille[y][x];
+            bool estSurChemin = positionsChemin.find(std::make_pair(x, y)) != positionsChemin.end();
+            
+            if (estSurChemin) {
+                // Afficher en vert les cases du chemin, tout en conservant les caractères spéciaux
+                std::cout << VERT << "*" << RESET;
+            } else {
+                // Afficher normalement les autres cases
+                std::cout << c;
+            }
+        }
+        std::cout << std::endl;
     }
 }
 
@@ -296,4 +328,114 @@ bool Labyrinthe::resoudreLabyrinthe1(std::vector<std::pair<int, int>>& chemin) {
     chemin.insert(chemin.end(), cheminE1.begin(), cheminE1.end());
     
     return true;
+}
+
+bool Labyrinthe::resoudreLabyrinthe2(std::vector<std::pair<int, int>>& chemin) {
+    
+    if (positionTNT.first != -1) {
+        
+        std::vector<std::pair<int, int>> chemin1T;
+        std::vector<std::pair<int, int>> cheminTB;
+        std::vector<std::pair<int, int>> cheminB2;
+        
+        bool cheminViaTNT = 
+            trouverChemin(positionPorte1, positionTNT, chemin1T) &&
+            trouverChemin(positionTNT, positionBouclier, cheminTB) &&
+            trouverChemin(positionBouclier, positionPorte2, cheminB2);
+        
+        if (cheminViaTNT) {
+            
+            chemin.insert(chemin.end(), chemin1T.begin(), chemin1T.end());
+            
+            // Ajouter T → B
+            if (!cheminTB.empty()) {
+                cheminTB.erase(cheminTB.begin());
+                chemin.insert(chemin.end(), cheminTB.begin(), cheminTB.end());
+            }
+            
+            // Ajouter B → 2
+            if (!cheminB2.empty()) {
+                cheminB2.erase(cheminB2.begin());
+                chemin.insert(chemin.end(), cheminB2.begin(), cheminB2.end());
+            }
+            
+            return true;
+        }
+    }
+    
+    // Si on n'a pas pu utiliser le TNT ou s'il n'y en a pas,
+    // essayer le chemin direct: 1 → B → 2
+    // std::vector<std::pair<int, int>> chemin1B;
+    // std::vector<std::pair<int, int>> cheminB2;
+    
+    // bool cheminDirect = 
+    //     trouverChemin(positionPorte1, positionBouclier, chemin1B) &&
+    //     trouverChemin(positionBouclier, positionPorte2, cheminB2);
+    
+    // if (cheminDirect) {
+    //     // Assembler les chemins
+    //     chemin.insert(chemin.end(), chemin1B.begin(), chemin1B.end());
+        
+    //     // Ajouter B → 2 (sans le premier point pour éviter la duplication)
+    //     if (!cheminB2.empty()) {
+    //         cheminB2.erase(cheminB2.begin());
+    //         chemin.insert(chemin.end(), cheminB2.begin(), cheminB2.end());
+    //     }
+        
+    //     return true;
+    // }
+    
+    // Si on arrive ici, aucun chemin n'a été trouvé
+    return false;
+
+}
+
+bool Labyrinthe::resoudreLabyrinthe3(std::vector<std::pair<int, int>>& chemin) {
+    std::vector<std::pair<int, int>> chemin2C;
+    std::vector<std::pair<int, int>> cheminCA;
+
+    bool chemin3 = false;
+    if (trouverChemin(positionPorte2, positionCouronne, chemin2C) 
+        && trouverChemin(positionCouronne, positionArrivee, cheminCA)) {
+        chemin3 = true;
+    } else {
+        chemin3 = false;
+    }
+    
+    if (chemin3) {
+
+        chemin.insert(chemin.end(), chemin2C.begin(), chemin2C.end());
+        
+        if (!cheminCA.empty()) {
+            cheminCA.erase(cheminCA.begin());
+            chemin.insert(chemin.end(), cheminCA.begin(), cheminCA.end());
+        }
+        
+        return true;
+    }
+    
+    // Si on arrive ici, aucun chemin n'a été trouvé
+    return false;
+}
+
+bool Labyrinthe::resoudreLabyrinthes(std::vector<std::pair<int, int>>& chemin) {
+    
+    chemin.clear();
+    
+    // Gestion du 1er labyrinthe
+    if (positionDepart.first != -1 && positionEpee.first != -1 && positionPorte1.first != -1) {
+        return resoudreLabyrinthe1(chemin);
+    }
+    
+    // Gestion du 2ème labyrinthe
+    if (positionPorte1.first != -1 && positionBouclier.first != -1 && positionPorte2.first != -1) {
+        return resoudreLabyrinthe2(chemin);
+    }
+    
+    // Gestion du 3ème labyrinthe
+    if (positionPorte2.first != -1 && positionCouronne.first != -1 && positionArrivee.first != -1) {
+        return resoudreLabyrinthe3(chemin);
+    }
+    
+    return false;
 }
