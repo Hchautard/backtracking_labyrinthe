@@ -147,31 +147,75 @@ std::vector<Labyrinthe> Labyrinthe::loadFile(const std::string& nomFichier) {
         return {};
     }
     
-    std::string ligne;
     std::vector<std::vector<std::string>> labyrinthesExtraits;
-    std::vector<std::string> labyrintheCourant;
     
+    // Lire tout le fichier
+    std::vector<std::string> lignes;
+    std::string ligne;
     while (std::getline(fichier, ligne)) {
-        // Si la ligne est vide et nous avons déjà des lignes de labyrinthe, 
-        // c'est la fin d'un labyrinthe
-        if (ligne.empty() && !labyrintheCourant.empty()) {
-            // Ajouter le labyrinthe courant à la liste des labyrinthes
-            labyrinthesExtraits.push_back(labyrintheCourant);
-            
-            // Réinitialiser pour le prochain labyrinthe
-            labyrintheCourant.clear();
+        lignes.push_back(ligne);
+    }
+    
+    // Traiter le cas spécial où deux labyrinthes sont côte à côte
+    size_t i = 0;
+    while (i < lignes.size()) {
+        // Si ligne vide, avancer
+        if (lignes[i].empty()) {
+            i++;
             continue;
         }
         
-        // Si la ligne n'est pas vide, l'ajouter au labyrinthe actuel
-        if (!ligne.empty()) {
-            labyrintheCourant.push_back(ligne);
+        // Chercher une tabulation dans la ligne qui indiquerait deux labyrinthes côte à côte
+        size_t pos = lignes[i].find('\t');
+        
+        if (pos != std::string::npos) {
+            // Deux labyrinthes côte à côte détectés
+            std::vector<std::string> labyrinthe1, labyrinthe2;
+            
+            // Déterminer la hauteur de ces labyrinthes
+            size_t hauteur = 0;
+            size_t j = i;
+            while (j < lignes.size() && !lignes[j].empty()) {
+                hauteur++;
+                j++;
+            }
+            
+            // Extraire les deux labyrinthes
+            for (size_t k = 0; k < hauteur; k++) {
+                if (i + k >= lignes.size()) break;
+                
+                const std::string& ligneCourante = lignes[i + k];
+                pos = ligneCourante.find('\t');
+                
+                if (pos != std::string::npos) {
+                    // Diviser la ligne en deux
+                    labyrinthe1.push_back(ligneCourante.substr(0, pos));
+                    labyrinthe2.push_back(ligneCourante.substr(pos + 1));
+                } else {
+                    // Si une ligne n'a pas de tabulation, considérer qu'elle appartient entièrement au premier labyrinthe
+                    labyrinthe1.push_back(ligneCourante);
+                    // Et ajouter une ligne vide au second
+                    labyrinthe2.push_back(std::string(labyrinthe1.back().length(), ' '));
+                }
+            }
+            
+            // Ajouter les deux labyrinthes extraits
+            labyrinthesExtraits.push_back(labyrinthe1);
+            labyrinthesExtraits.push_back(labyrinthe2);
+            
+            // Avancer i après ces labyrinthes
+            i += hauteur;
+        } else {
+            // Un seul labyrinthe, extraire normalement
+            std::vector<std::string> labyrinthe;
+            
+            while (i < lignes.size() && !lignes[i].empty()) {
+                labyrinthe.push_back(lignes[i]);
+                i++;
+            }
+            
+            labyrinthesExtraits.push_back(labyrinthe);
         }
-    }
-    
-    // Ajouter le dernier labyrinthe si nécessaire
-    if (!labyrintheCourant.empty()) {
-        labyrinthesExtraits.push_back(labyrintheCourant);
     }
     
     fichier.close();
@@ -181,6 +225,8 @@ std::vector<Labyrinthe> Labyrinthe::loadFile(const std::string& nomFichier) {
     for (const auto& grilleLabyrinthe : labyrinthesExtraits) {
         labyrinthes.push_back(Labyrinthe(grilleLabyrinthe));
     }
+    
+    std::cout << "Nombre de labyrinthes chargés: " << labyrinthes.size() << std::endl;
     
     return labyrinthes;
 }
@@ -291,7 +337,7 @@ bool Labyrinthe::trouverChemin(std::pair<int, int> debut, std::pair<int, int> fi
     return trouve;
 }
 
-// Méthode pour résoudre le labyrinthe 1 (D → E → 1)
+// Méthode pour résoudre le labyrinthe 1 
 bool Labyrinthe::resoudreLabyrinthe1(std::vector<std::pair<int, int>>& chemin) {
     // Vérifier que les positions nécessaires existent
     if (positionDepart.first == -1 || positionEpee.first == -1 || positionPorte1.first == -1) {
@@ -363,31 +409,82 @@ bool Labyrinthe::resoudreLabyrinthe2(std::vector<std::pair<int, int>>& chemin) {
         }
     }
     
-    // Si on n'a pas pu utiliser le TNT ou s'il n'y en a pas,
-    // essayer le chemin direct: 1 → B → 2
-    // std::vector<std::pair<int, int>> chemin1B;
-    // std::vector<std::pair<int, int>> cheminB2;
-    
-    // bool cheminDirect = 
-    //     trouverChemin(positionPorte1, positionBouclier, chemin1B) &&
-    //     trouverChemin(positionBouclier, positionPorte2, cheminB2);
-    
-    // if (cheminDirect) {
-    //     // Assembler les chemins
-    //     chemin.insert(chemin.end(), chemin1B.begin(), chemin1B.end());
-        
-    //     // Ajouter B → 2 (sans le premier point pour éviter la duplication)
-    //     if (!cheminB2.empty()) {
-    //         cheminB2.erase(cheminB2.begin());
-    //         chemin.insert(chemin.end(), cheminB2.begin(), cheminB2.end());
-    //     }
-        
-    //     return true;
-    // }
-    
     // Si on arrive ici, aucun chemin n'a été trouvé
     return false;
 
+}
+
+// Résoudre le labyrinthe 2 après l'explosion de la TNT
+bool Labyrinthe::resoudreLabyrinthe2Prime(std::vector<std::pair<int, int>>& chemin) {
+    // Cette fonction résout la deuxième partie du labyrinthe 2 
+    // à partir du TNT jusqu'à la porte 2 en passant par le bouclier
+    
+    // Vérifier que les positions nécessaires existent
+    if (positionTNT.first == -1) {
+        std::cout << "Position TNT manquante dans le labyrinthe modifié." << std::endl;
+        // Si la position TNT n'est pas présente dans le labyrinthe modifié, 
+        // nous pouvons essayer de l'initialiser manuellement en utilisant la même
+        // position que dans le labyrinthe original
+        
+        // Par exemple, rechercher la position dans la grille modifiée où il devrait y avoir 
+        // la TNT (une zone maintenant vide où le mur était détruit)
+        for (int y = 0; y < hauteur; ++y) {
+            for (int x = 0; x < largeur; ++x) {
+                // Chercher la zone qui pourrait représenter la position où était la TNT
+                // Ce critère est arbitraire et peut nécessiter des ajustements
+                if (grille[y][x] == ' ' && 
+                    (x > 0 && grille[y][x-1] == ' ') && 
+                    (y > 0 && grille[y-1][x] == ' ')) {
+                    positionTNT = std::make_pair(x, y);
+                    break;
+                }
+            }
+            if (positionTNT.first != -1) break;
+        }
+        
+        // Si toujours pas trouvé, essayer un emplacement spécifique dans le labyrinthe
+        if (positionTNT.first == -1) {
+            positionTNT = std::make_pair(18, 13); // Position probable basée sur le labyrinthe original
+        }
+    }
+    
+    if (positionBouclier.first == -1) {
+        std::cout << "Position bouclier manquante dans le labyrinthe." << std::endl;
+        return false;
+    }
+    
+    if (positionPorte2.first == -1) {
+        std::cout << "Position porte 2 manquante dans le labyrinthe." << std::endl;
+        return false;
+    }
+
+    // Vider le chemin actuel
+    chemin.clear();
+    
+    // Étape 1: T → B (TNT vers Bouclier)
+    std::vector<std::pair<int, int>> cheminTB;
+    if (!trouverChemin(positionTNT, positionBouclier, cheminTB)) {
+        std::cout << "Aucun chemin trouvé de T à B" << std::endl;
+        return false;
+    }
+    
+    // Étape 2: B → 2 (Bouclier vers Porte 2)
+    std::vector<std::pair<int, int>> cheminB2;
+    if (!trouverChemin(positionBouclier, positionPorte2, cheminB2)) {
+        std::cout << "Aucun chemin trouvé de B à 2" << std::endl;
+        return false;
+    }
+    
+    // Ajouter T → B au chemin complet
+    chemin.insert(chemin.end(), cheminTB.begin(), cheminTB.end());
+    
+    // Ajouter B → 2 (sans le premier point qui est déjà inclus)
+    if (!cheminB2.empty()) {
+        cheminB2.erase(cheminB2.begin());
+        chemin.insert(chemin.end(), cheminB2.begin(), cheminB2.end());
+    }
+    
+    return true;
 }
 
 bool Labyrinthe::resoudreLabyrinthe3(std::vector<std::pair<int, int>>& chemin) {

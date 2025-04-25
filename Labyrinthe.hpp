@@ -71,6 +71,7 @@ public:
     // Méthode pour résoudre le labyrinthe 1 (D → E → 1)
     bool resoudreLabyrinthe1(std::vector<std::pair<int, int>>& chemin);
     bool resoudreLabyrinthe2(std::vector<std::pair<int, int>>& chemin);
+    bool resoudreLabyrinthe2Prime(std::vector<std::pair<int, int>>& chemin);
     bool resoudreLabyrinthe3(std::vector<std::pair<int, int>>& chemin);
     
     // Méthode pour résoudre un labyrinthe complet
