@@ -56,6 +56,10 @@ public:
     // Méthodes pour charger et afficher le labyrinthe
     void afficher() const;
     void afficherAvecChemin(const std::vector<std::pair<int, int>>& chemin) const;
+    void afficherCheminVert(const std::vector<std::pair<int, int>>& chemin) const;
+    void afficherCheminRouge(const std::vector<std::pair<int, int>>& chemin) const;
+    void afficherDeuxChemins(const std::vector<std::pair<int, int>>& cheminVert, 
+                           const std::vector<std::pair<int, int>>& cheminRouge) const;
     
     // Méthode pour charger plusieurs labyrinthes depuis un fichier
     static std::vector<Labyrinthe> loadFile(const std::string& nomFichier);
@@ -68,13 +72,22 @@ public:
     bool trouverChemin(std::pair<int, int> debut, std::pair<int, int> fin, 
                      std::vector<std::pair<int, int>>& chemin);
     
-    // Méthode pour résoudre le labyrinthe 1 (D → E → 1)
+    // Nouvelles méthodes de résolution
+    bool resoudreTrajetPrincipal(std::vector<std::pair<int, int>>& chemin);
+    bool collecterObjets(std::vector<std::pair<int, int>>& chemin);
+    bool resoudreLabyrintheComplet(std::vector<std::pair<int, int>>& chemin);
+    
+    // Méthodes pour résoudre chaque étape individuellement
     bool resoudreLabyrinthe1(std::vector<std::pair<int, int>>& chemin);
     bool resoudreLabyrinthe2(std::vector<std::pair<int, int>>& chemin);
-    bool resoudreLabyrinthe2Prime(std::vector<std::pair<int, int>>& chemin);
     bool resoudreLabyrinthe3(std::vector<std::pair<int, int>>& chemin);
     
-    // Méthode pour résoudre un labyrinthe complet
+    // Méthodes pour collecter chaque objet
+    bool collecterCouronne(std::vector<std::pair<int, int>>& chemin);
+    bool collecterBouclier(std::vector<std::pair<int, int>>& chemin);
+    bool collecterEpee(std::vector<std::pair<int, int>>& chemin);
+    
+    // Méthode pour résoudre un labyrinthe complet (pour compatibilité)
     bool resoudreLabyrinthes(std::vector<std::pair<int, int>>& chemin);
 };
 

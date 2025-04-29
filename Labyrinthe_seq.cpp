@@ -3,6 +3,11 @@
 #include <fstream>
 #include <sstream>
 
+// COULEURS POUR LE CHEMIN
+const std::string VERT = "\033[32m";
+const std::string ROUGE = "\033[31m";
+const std::string RESET = "\033[0m";
+
 // Constructeur par défaut
 Labyrinthe::Labyrinthe() : largeur(0), hauteur(0) {}
 
@@ -120,15 +125,22 @@ void Labyrinthe::afficherAvecChemin(const std::vector<std::pair<int, int>>& chem
         char cellule = grilleTemp[x][y];
         if (cellule != 'D' && cellule != 'A' && cellule != 'E' && 
             cellule != 'B' && cellule != 'C' && 
-            cellule != '1' && cellule != '2') {
-            grilleTemp[x][y] = '*';
+            cellule != '1' && cellule != '2' && cellule != 'T') {
+            grilleTemp[x][y] = '*'; // Marquer le chemin
         }
     }
     
     // Afficher la grille avec le chemin
     for (int i = 0; i < hauteur; ++i) {
         for (int j = 0; j < largeur; ++j) {
-            std::cout << grilleTemp[i][j];
+            char c = grilleTemp[i][j];
+            if (c == '*') {
+                std::cout << VERT << c << RESET;
+            } else if (c == 'D' || c == 'A' || c == 'E' || c == 'B' || c == 'C' || c == '1' || c == '2' || c == 'T') {
+                std::cout << ROUGE << c << RESET;
+            } else {
+                std::cout << c;
+            }
         }
         std::cout << std::endl;
     }
@@ -217,101 +229,209 @@ bool Labyrinthe::trouverChemin(std::pair<int, int> debut, std::pair<int, int> fi
     return backtrackingSequentiel(debut.first, debut.second, fin.first, fin.second, visite, chemin);
 }
 
-// Méthode pour résoudre le premier labyrinthe (D → E → 1)
-bool Labyrinthe::resoudreLabyrinthe1(std::vector<std::pair<int, int>>& chemin) {
+// Méthode pour résoudre le trajet principal (D → 1 → T → 2 → A)
+bool Labyrinthe::resoudreTrajetPrincipal(std::vector<std::pair<int, int>>& chemin) {
     std::vector<std::pair<int, int>> cheminPartiel;
     chemin.clear();
     
-    // Étape 1: De D à E
-    if (!trouverChemin(positionDepart, positionEpee, cheminPartiel)) {
+    // Étape 1: De D à 1
+    if (!trouverChemin(positionDepart, positionPorte1, cheminPartiel)) {
         return false;
     }
     
     // Ajouter le chemin partiel au chemin complet
     chemin.insert(chemin.end(), cheminPartiel.begin(), cheminPartiel.end());
     
-    // Étape 2: De E à 1
+    // Étape 2: De 1 à T
     cheminPartiel.clear();
-    if (!trouverChemin(positionEpee, positionPorte1, cheminPartiel)) {
+    if (!trouverChemin(positionPorte1, positionTNT, cheminPartiel)) {
+        return false;
+    }
+    
+    // Ajouter le reste du chemin (sans dupliquer la position 1)
+    chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
+    
+    // Étape 3: De T à 2
+    cheminPartiel.clear();
+    if (!trouverChemin(positionTNT, positionPorte2, cheminPartiel)) {
+        return false;
+    }
+    
+    // Ajouter le reste du chemin (sans dupliquer la position T)
+    chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
+    
+    // Étape 4: De 2 à A
+    cheminPartiel.clear();
+    if (!trouverChemin(positionPorte2, positionArrivee, cheminPartiel)) {
+        return false;
+    }
+    
+    // Ajouter le reste du chemin (sans dupliquer la position 2)
+    chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
+    
+    return true;
+}
+
+// Méthode pour collecter les objets dans l'ordre C, B, E
+bool Labyrinthe::collecterObjets(std::vector<std::pair<int, int>>& chemin) {
+    std::vector<std::pair<int, int>> cheminPartiel;
+    
+    // On part de la position actuelle (qui devrait être A)
+    std::pair<int, int> positionActuelle = positionArrivee;
+    
+    // Étape 1: De A à C (Couronne)
+    if (!trouverChemin(positionActuelle, positionCouronne, cheminPartiel)) {
+        return false;
+    }
+    
+    // Ajouter le chemin partiel au chemin complet (sans dupliquer la position actuelle)
+    if (!cheminPartiel.empty()) {
+        chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
+    }
+    
+    // Mise à jour de la position actuelle
+    positionActuelle = positionCouronne;
+    
+    // Étape 2: De C à la porte 2
+    cheminPartiel.clear();
+    if (!trouverChemin(positionActuelle, positionPorte2, cheminPartiel)) {
+        return false;
+    }
+    
+    // Ajouter le reste du chemin (sans dupliquer la position C)
+    if (!cheminPartiel.empty()) {
+        chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
+    }
+    
+    // Mise à jour de la position actuelle
+    positionActuelle = positionPorte2;
+    
+    // Étape 3: De porte 2 à B (Bouclier)
+    cheminPartiel.clear();
+    if (!trouverChemin(positionActuelle, positionBouclier, cheminPartiel)) {
+        return false;
+    }
+    
+    // Ajouter le reste du chemin (sans dupliquer la position actuelle)
+    if (!cheminPartiel.empty()) {
+        chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
+    }
+    
+    // Mise à jour de la position actuelle
+    positionActuelle = positionBouclier;
+    
+    // Étape 4: De B à la porte 1
+    cheminPartiel.clear();
+    if (!trouverChemin(positionActuelle, positionPorte1, cheminPartiel)) {
+        return false;
+    }
+    
+    // Ajouter le reste du chemin (sans dupliquer la position B)
+    if (!cheminPartiel.empty()) {
+        chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
+    }
+    
+    // Mise à jour de la position actuelle
+    positionActuelle = positionPorte1;
+    
+    // Étape 5: De porte 1 à E (Épée)
+    cheminPartiel.clear();
+    if (!trouverChemin(positionActuelle, positionEpee, cheminPartiel)) {
+        return false;
+    }
+    
+    // Ajouter le reste du chemin (sans dupliquer la position 1)
+    if (!cheminPartiel.empty()) {
+        chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
+    }
+    
+    // Mise à jour de la position actuelle
+    positionActuelle = positionEpee;
+    
+    // Étape finale: De E à D (Départ)
+    cheminPartiel.clear();
+    if (!trouverChemin(positionActuelle, positionDepart, cheminPartiel)) {
         return false;
     }
     
     // Ajouter le reste du chemin (sans dupliquer la position E)
-    chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
+    if (!cheminPartiel.empty()) {
+        chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
+    }
     
     return true;
 }
 
+// Méthode pour résoudre le labyrinthe complet avec l'ordre D → 1 → T → 2 → A → C → B → E
+bool Labyrinthe::resoudreLabyrintheComplet(std::vector<std::pair<int, int>>& chemin) {
+    chemin.clear();
+    
+    // D'abord le trajet principal D → 1 → T → 2 → A
+    if (!resoudreTrajetPrincipal(chemin)) {
+        std::cout << "Impossible de résoudre le trajet principal (D → 1 → T → 2 → A)" << std::endl;
+        return false;
+    }
+    
+    // Ensuite, collecter les objets A → C → B → E
+    if (!collecterObjets(chemin)) {
+        std::cout << "Impossible de collecter les objets dans l'ordre C, B, E" << std::endl;
+        return false;
+    }
+    
+    return true;
+}
+
+// Méthode pour résoudre le premier labyrinthe (D → 1)
+bool Labyrinthe::resoudreLabyrinthe1(std::vector<std::pair<int, int>>& chemin) {
+    return trouverChemin(positionDepart, positionPorte1, chemin);
+}
+
+// Méthode pour résoudre le deuxième labyrinthe (1 → T → 2)
 bool Labyrinthe::resoudreLabyrinthe2(std::vector<std::pair<int, int>>& chemin) {
     std::vector<std::pair<int, int>> cheminPartiel;
     chemin.clear();
     
-    // De 1 à B
-    if (!trouverChemin(positionPorte1, positionBouclier, cheminPartiel)) {
+    // Étape 1: De 1 à T
+    if (!trouverChemin(positionPorte1, positionTNT, cheminPartiel)) {
         return false;
     }
     
+    // Ajouter le chemin partiel au chemin complet
     chemin.insert(chemin.end(), cheminPartiel.begin(), cheminPartiel.end());
     
-    // De B à 2
+    // Étape 2: De T à 2
     cheminPartiel.clear();
-    if (!trouverChemin(positionBouclier, positionPorte2, cheminPartiel)) {
+    if (!trouverChemin(positionTNT, positionPorte2, cheminPartiel)) {
         return false;
     }
     
+    // Ajouter le reste du chemin (sans dupliquer la position T)
     chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
     
     return true;
 }
 
+// Méthode pour résoudre le troisième labyrinthe (2 → A)
 bool Labyrinthe::resoudreLabyrinthe3(std::vector<std::pair<int, int>>& chemin) {
-    std::vector<std::pair<int, int>> cheminPartiel;
-    chemin.clear();
-    
-    // De 2 à C
-    if (!trouverChemin(positionPorte2, positionCouronne, cheminPartiel)) {
-        return false;
-    }
-    
-    chemin.insert(chemin.end(), cheminPartiel.begin(), cheminPartiel.end());
-    
-    // De C à A
-    cheminPartiel.clear();
-    if (!trouverChemin(positionCouronne, positionArrivee, cheminPartiel)) {
-        return false;
-    }
-    
-    chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
-    
-    return true;
+    return trouverChemin(positionPorte2, positionArrivee, chemin);
 }
 
+// Méthode pour collecter la couronne (A → C)
+bool Labyrinthe::collecterCouronne(std::vector<std::pair<int, int>>& chemin) {
+    return trouverChemin(positionArrivee, positionCouronne, chemin);
+}
+
+// Méthode pour collecter le bouclier (Porte 2 → B)
+bool Labyrinthe::collecterBouclier(std::vector<std::pair<int, int>>& chemin) {
+    return trouverChemin(positionPorte2, positionBouclier, chemin);
+}
+
+// Méthode pour collecter l'épée (Porte 1 → E)
+bool Labyrinthe::collecterEpee(std::vector<std::pair<int, int>>& chemin) {
+    return trouverChemin(positionPorte1, positionEpee, chemin);
+}
+
+// Méthode originale pour résoudre le chemin complet (pour compatibilité)
 bool Labyrinthe::resoudreLabyrinthes(std::vector<std::pair<int, int>>& chemin) {
-    std::vector<std::pair<int, int>> chemin1, chemin2, chemin3;
-    
-    // Résoudre le premier labyrinthe
-    if (!resoudreLabyrinthe1(chemin1)) {
-        std::cout << "Aucun chemin trouvé dans le premier labyrinthe!" << std::endl;
-        return false;
-    }
-    
-    // Résoudre le deuxième labyrinthe
-    if (!resoudreLabyrinthe2(chemin2)) {
-        std::cout << "Aucun chemin trouvé dans le deuxième labyrinthe!" << std::endl;
-        return false;
-    }
-    
-    // Résoudre le troisième labyrinthe
-    if (!resoudreLabyrinthe3(chemin3)) {
-        std::cout << "Aucun chemin trouvé dans le troisième labyrinthe!" << std::endl;
-        return false;
-    }
-    
-    // Assembler les chemins
-    chemin.clear();
-    chemin.insert(chemin.end(), chemin1.begin(), chemin1.end());
-    chemin.insert(chemin.end(), chemin2.begin(), chemin2.end());
-    chemin.insert(chemin.end(), chemin3.begin(), chemin3.end());
-    
-    return true;
+    return resoudreLabyrintheComplet(chemin);
 }
