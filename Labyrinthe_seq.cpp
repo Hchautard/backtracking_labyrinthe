@@ -112,7 +112,7 @@ void Labyrinthe::afficher() const {
 }
 
 // Méthode pour afficher le labyrinthe avec le chemin trouvé
-void Labyrinthe::afficherAvecChemin(const std::vector<std::pair<int, int>>& chemin) const {
+void Labyrinthe::afficherAvecChemin(const std::vector<std::pair<int, int>>& chemin, const bool pathObjectCollect) const {
     // Créer une copie temporaire de la grille
     std::vector<std::vector<char>> grilleTemp = grille;
     
@@ -130,20 +130,35 @@ void Labyrinthe::afficherAvecChemin(const std::vector<std::pair<int, int>>& chem
         }
     }
     
-    // Afficher la grille avec le chemin
-    for (int i = 0; i < hauteur; ++i) {
-        for (int j = 0; j < largeur; ++j) {
-            char c = grilleTemp[i][j];
-            if (c == '*') {
-                std::cout << VERT << c << RESET;
-            } else if (c == 'D' || c == 'A' || c == 'E' || c == 'B' || c == 'C' || c == '1' || c == '2' || c == 'T') {
-                std::cout << ROUGE << c << RESET;
-            } else {
-                std::cout << c;
+    // Si pathObjectCollect est vrai, afficher le chemin en rouge
+    // Sinon, afficher le chemin en vert
+    if (pathObjectCollect) {
+        for (int i = 0; i < hauteur; ++i) {
+            for (int j = 0; j < largeur; ++j) {
+                char c = grilleTemp[i][j];
+                if (c == '*') {
+                    std::cout << ROUGE << c << RESET; // Chemin en vert
+                } else {
+                    std::cout << c; // Autres caractères normaux
+                }
+
             }
+            std::cout << std::endl;
         }
-        std::cout << std::endl;
+    } else {
+        for (int i = 0; i < hauteur; ++i) {
+            for (int j = 0; j < largeur; ++j) {
+                char c = grilleTemp[i][j];
+                if (c == '*') {
+                    std::cout << VERT << c << RESET; // Chemin en vert
+                } else {
+                    std::cout << c; // Autres caractères normaux
+                }
+            }
+            std::cout << std::endl;
+        }
     }
+    
 }
 
 // Méthode pour charger plusieurs labyrinthes depuis un fichier
@@ -167,6 +182,13 @@ std::vector<Labyrinthe> Labyrinthe::loadFile(const std::string& nomFichier) {
             continue;
         }
         
+        // Vérifier si la ligne contient une tabulation (qui sépare deux labyrinthes côte à côte)
+        size_t tabPos = ligne.find('\t');
+        if (tabPos != std::string::npos) {
+            // Prendre seulement la première partie (avant la tabulation)
+            ligne = ligne.substr(0, tabPos);
+        }
+        
         // Ajouter la ligne à la grille temporaire
         if (!ligne.empty()) {
             std::vector<char> ligneCar(ligne.begin(), ligne.end());
@@ -180,6 +202,58 @@ std::vector<Labyrinthe> Labyrinthe::loadFile(const std::string& nomFichier) {
     }
     
     fichier.close();
+    
+    // Maintenant, lisons le labyrinthe 2 Prime (après la tabulation)
+    fichier.open(nomFichier);
+    grilleTemp.clear();
+    int compteurLignes = 0;
+    bool auMoinsUneTabulationTrouvee = false;
+    
+    while (std::getline(fichier, ligne)) {
+        // Ignorer les lignes jusqu'au deuxième labyrinthe
+        if (compteurLignes < 21) {  // 20 lignes du premier labyrinthe + 1 ligne vide
+            compteurLignes++;
+            continue;
+        }
+        
+        // Vérifier si la ligne contient une tabulation
+        size_t tabPos = ligne.find('\t');
+        if (tabPos != std::string::npos) {
+            auMoinsUneTabulationTrouvee = true;
+            // Prendre la deuxième partie (après la tabulation)
+            if (tabPos + 1 < ligne.length()) {
+                std::string ligneDroite = ligne.substr(tabPos + 1);
+                if (!ligneDroite.empty()) {
+                    std::vector<char> ligneCar(ligneDroite.begin(), ligneDroite.end());
+                    grilleTemp.push_back(ligneCar);
+                }
+            }
+        } else if (ligne.empty() && !grilleTemp.empty() && auMoinsUneTabulationTrouvee) {
+            // Fin du labyrinthe 2 Prime
+            break;
+        }
+    }
+    
+    // Ajouter le labyrinthe 2 Prime s'il a été trouvé
+    if (!grilleTemp.empty()) {
+        labyrinthes.push_back(Labyrinthe(grilleTemp));
+    }
+    
+    fichier.close();
+    
+    // Afficher des informations pour le débogage
+    std::cout << "Nombre de labyrinthes chargés: " << labyrinthes.size() << std::endl;
+    for (size_t i = 0; i < labyrinthes.size(); ++i) {
+        std::cout << "Labyrinthe " << i << ":" << std::endl;
+        std::cout << "  Dimensions: " << labyrinthes[i].getLargeur() << "x" << labyrinthes[i].getHauteur() << std::endl;
+        std::cout << "  Position de la porte 1: " << labyrinthes[i].getPositionPorte1().first << ", " 
+                  << labyrinthes[i].getPositionPorte1().second << std::endl;
+        std::cout << "  Position de T: " << labyrinthes[i].getPositionTNT().first << ", " 
+                  << labyrinthes[i].getPositionTNT().second << std::endl;
+        std::cout << "  Position de la porte 2: " << labyrinthes[i].getPositionPorte2().first << ", " 
+                  << labyrinthes[i].getPositionPorte2().second << std::endl;
+    }
+    
     return labyrinthes;
 }
 
@@ -386,30 +460,88 @@ bool Labyrinthe::resoudreLabyrinthe1(std::vector<std::pair<int, int>>& chemin) {
     return trouverChemin(positionDepart, positionPorte1, chemin);
 }
 
+std::ostream& operator<<(std::ostream& os, const std::pair<int, int>& p) {
+    os << "(" << p.first << ", " << p.second << ")";
+    return os;
+}
+
 // Méthode pour résoudre le deuxième labyrinthe (1 → T → 2)
 bool Labyrinthe::resoudreLabyrinthe2(std::vector<std::pair<int, int>>& chemin) {
-    std::vector<std::pair<int, int>> cheminPartiel;
+    std::vector<std::pair<int, int>> cheminPartiel1;
+    std::vector<std::pair<int, int>> cheminPartiel2;
     chemin.clear();
     
+    // Déboguer les positions
+    std::cout << "Position de la porte 1: " << positionPorte1.first << ", " << positionPorte1.second << std::endl;
+    std::cout << "Position de T: " << positionTNT.first << ", " << positionTNT.second << std::endl;
+    std::cout << "Position de la porte 2: " << positionPorte2.first << ", " << positionPorte2.second << std::endl;
+    
+    // Pour le labyrinthe 2, nous devons utiliser le même labyrinthe pour les deux chemins
     // Étape 1: De 1 à T
-    if (!trouverChemin(positionPorte1, positionTNT, cheminPartiel)) {
+    if (!trouverChemin(positionPorte1, positionTNT, cheminPartiel1)) {
+        std::cout << "Échec: Impossible de trouver un chemin de la porte 1 à T" << std::endl;
         return false;
     }
     
     // Ajouter le chemin partiel au chemin complet
-    chemin.insert(chemin.end(), cheminPartiel.begin(), cheminPartiel.end());
+    chemin = cheminPartiel1;
     
-    // Étape 2: De T à 2
-    cheminPartiel.clear();
-    if (!trouverChemin(positionTNT, positionPorte2, cheminPartiel)) {
-        return false;
-    }
-    
-    // Ajouter le reste du chemin (sans dupliquer la position T)
-    chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
+    // On affiche ce premier chemin
+    std::cout << "\nChemin de la porte 1 à T:" << std::endl;
+    afficherAvecChemin(cheminPartiel1, false);
     
     return true;
 }
+
+// Ajoutez cette nouvelle méthode pour gérer spécifiquement le labyrinthe2Prime
+bool Labyrinthe::resoudreLabyrinthe2Prime(std::vector<std::pair<int, int>>& chemin) {
+    std::vector<std::pair<int, int>> cheminPartiel;
+    chemin.clear();
+    
+    // Déboguer les positions
+    std::cout << "Position de T: " << positionTNT.first << ", " << positionTNT.second << std::endl;
+    std::cout << "Position de la porte 2: " << positionPorte2.first << ", " << positionPorte2.second << std::endl;
+    
+    // Étape 2: De T à 2 dans le labyrinthe prime
+    if (!trouverChemin(positionTNT, positionPorte2, cheminPartiel)) {
+        std::cout << "Échec: Impossible de trouver un chemin de T à la porte 2" << std::endl;
+        return false;
+    }
+    
+    // Ajouter le chemin
+    chemin = cheminPartiel;
+    
+    // On affiche ce chemin
+    std::cout << "\nChemin de T à la porte 2:" << std::endl;
+    afficherAvecChemin(cheminPartiel, false);
+    
+    return true;
+}
+
+// Méthode pour résoudre le deuxième labyrinthe après explosion du mur (1 → T → 2)
+// bool Labyrinthe::resoudreLabyrinthe2Prime(std::vector<std::pair<int, int>>& chemin) {
+//     std::vector<std::pair<int, int>> cheminPartiel;
+//     chemin.clear();
+    
+//     // Étape 1: De 1 à T
+//     if (!trouverChemin(positionPorte1, positionTNT, cheminPartiel)) {
+//         return false;
+//     }
+    
+//     // Ajouter le chemin partiel au chemin complet
+//     chemin.insert(chemin.end(), cheminPartiel.begin(), cheminPartiel.end());
+    
+//     // Étape 2: De T à 2
+//     cheminPartiel.clear();
+//     if (!trouverChemin(positionTNT, positionPorte2, cheminPartiel)) {
+//         return false;
+//     }
+    
+//     // Ajouter le reste du chemin (sans dupliquer la position T)
+//     chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
+    
+//     return true;
+// }
 
 // Méthode pour résoudre le troisième labyrinthe (2 → A)
 bool Labyrinthe::resoudreLabyrinthe3(std::vector<std::pair<int, int>>& chemin) {

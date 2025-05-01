@@ -55,11 +55,7 @@ public:
     
     // Méthodes pour charger et afficher le labyrinthe
     void afficher() const;
-    void afficherAvecChemin(const std::vector<std::pair<int, int>>& chemin) const;
-    void afficherCheminVert(const std::vector<std::pair<int, int>>& chemin) const;
-    void afficherCheminRouge(const std::vector<std::pair<int, int>>& chemin) const;
-    void afficherDeuxChemins(const std::vector<std::pair<int, int>>& cheminVert, 
-                           const std::vector<std::pair<int, int>>& cheminRouge) const;
+    void afficherAvecChemin(const std::vector<std::pair<int, int>>& chemin, const bool pathObjectCollect) const;
     
     // Méthode pour charger plusieurs labyrinthes depuis un fichier
     static std::vector<Labyrinthe> loadFile(const std::string& nomFichier);
@@ -80,6 +76,7 @@ public:
     // Méthodes pour résoudre chaque étape individuellement
     bool resoudreLabyrinthe1(std::vector<std::pair<int, int>>& chemin);
     bool resoudreLabyrinthe2(std::vector<std::pair<int, int>>& chemin);
+    bool resoudreLabyrinthe2Prime(std::vector<std::pair<int, int>>& chemin);
     bool resoudreLabyrinthe3(std::vector<std::pair<int, int>>& chemin);
     
     // Méthodes pour collecter chaque objet
