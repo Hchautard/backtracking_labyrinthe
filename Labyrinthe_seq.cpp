@@ -137,9 +137,11 @@ void Labyrinthe::afficherAvecChemin(const std::vector<std::pair<int, int>>& chem
             for (int j = 0; j < largeur; ++j) {
                 char c = grilleTemp[i][j];
                 if (c == '*') {
-                    std::cout << ROUGE << c << RESET; // Chemin en vert
+                    std::cout << ROUGE << c << RESET;
+                } else if (c == 'E' || c == 'B' || c == 'C') {
+                    std::cout << ROUGE << c << RESET;
                 } else {
-                    std::cout << c; // Autres caractères normaux
+                    std::cout << c; 
                 }
 
             }
@@ -150,9 +152,9 @@ void Labyrinthe::afficherAvecChemin(const std::vector<std::pair<int, int>>& chem
             for (int j = 0; j < largeur; ++j) {
                 char c = grilleTemp[i][j];
                 if (c == '*') {
-                    std::cout << VERT << c << RESET; // Chemin en vert
+                    std::cout << VERT << c << RESET; 
                 } else {
-                    std::cout << c; // Autres caractères normaux
+                    std::cout << c; 
                 }
             }
             std::cout << std::endl;
@@ -242,17 +244,17 @@ std::vector<Labyrinthe> Labyrinthe::loadFile(const std::string& nomFichier) {
     fichier.close();
     
     // Afficher des informations pour le débogage
-    std::cout << "Nombre de labyrinthes chargés: " << labyrinthes.size() << std::endl;
-    for (size_t i = 0; i < labyrinthes.size(); ++i) {
-        std::cout << "Labyrinthe " << i << ":" << std::endl;
-        std::cout << "  Dimensions: " << labyrinthes[i].getLargeur() << "x" << labyrinthes[i].getHauteur() << std::endl;
-        std::cout << "  Position de la porte 1: " << labyrinthes[i].getPositionPorte1().first << ", " 
-                  << labyrinthes[i].getPositionPorte1().second << std::endl;
-        std::cout << "  Position de T: " << labyrinthes[i].getPositionTNT().first << ", " 
-                  << labyrinthes[i].getPositionTNT().second << std::endl;
-        std::cout << "  Position de la porte 2: " << labyrinthes[i].getPositionPorte2().first << ", " 
-                  << labyrinthes[i].getPositionPorte2().second << std::endl;
-    }
+    // std::cout << "Nombre de labyrinthes chargés: " << labyrinthes.size() << std::endl;
+    // for (size_t i = 0; i < labyrinthes.size(); ++i) {
+    //     std::cout << "Labyrinthe " << i << ":" << std::endl;
+    //     std::cout << "  Dimensions: " << labyrinthes[i].getLargeur() << "x" << labyrinthes[i].getHauteur() << std::endl;
+    //     std::cout << "  Position de la porte 1: " << labyrinthes[i].getPositionPorte1().first << ", " 
+    //               << labyrinthes[i].getPositionPorte1().second << std::endl;
+    //     std::cout << "  Position de T: " << labyrinthes[i].getPositionTNT().first << ", " 
+    //               << labyrinthes[i].getPositionTNT().second << std::endl;
+    //     std::cout << "  Position de la porte 2: " << labyrinthes[i].getPositionPorte2().first << ", " 
+    //               << labyrinthes[i].getPositionPorte2().second << std::endl;
+    // }
     
     return labyrinthes;
 }
@@ -471,11 +473,6 @@ bool Labyrinthe::resoudreLabyrinthe2(std::vector<std::pair<int, int>>& chemin) {
     std::vector<std::pair<int, int>> cheminPartiel2;
     chemin.clear();
     
-    // Déboguer les positions
-    std::cout << "Position de la porte 1: " << positionPorte1.first << ", " << positionPorte1.second << std::endl;
-    std::cout << "Position de T: " << positionTNT.first << ", " << positionTNT.second << std::endl;
-    std::cout << "Position de la porte 2: " << positionPorte2.first << ", " << positionPorte2.second << std::endl;
-    
     // Pour le labyrinthe 2, nous devons utiliser le même labyrinthe pour les deux chemins
     // Étape 1: De 1 à T
     if (!trouverChemin(positionPorte1, positionTNT, cheminPartiel1)) {
@@ -497,10 +494,6 @@ bool Labyrinthe::resoudreLabyrinthe2(std::vector<std::pair<int, int>>& chemin) {
 bool Labyrinthe::resoudreLabyrinthe2Prime(std::vector<std::pair<int, int>>& chemin) {
     std::vector<std::pair<int, int>> cheminPartiel;
     chemin.clear();
-    
-    // Déboguer les positions
-    std::cout << "Position de T: " << positionTNT.first << ", " << positionTNT.second << std::endl;
-    std::cout << "Position de la porte 2: " << positionPorte2.first << ", " << positionPorte2.second << std::endl;
     
     // Étape 2: De T à 2 dans le labyrinthe prime
     if (!trouverChemin(positionTNT, positionPorte2, cheminPartiel)) {

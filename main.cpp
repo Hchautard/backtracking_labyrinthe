@@ -23,9 +23,10 @@ int main() {
     bool succes = false;
     
     // Essayer de résoudre le chemin principal d'abord
-    std::cout << "Résolution du trajet principal (D → 1 → T → 2 → A)..." << std::endl;
-    succes = labyrinthes[0].resoudreTrajetPrincipal(chemin);
+    // std::cout << "Résolution du trajet principal (D → 1 → T → 2 → A)..." << std::endl;
+    // succes = labyrinthes[0].resoudreTrajetPrincipal(chemin);
     
+    /**
     if (succes) {
         std::cout << "Trajet principal trouvé!" << std::endl;
         std::cout << "Longueur du chemin: " << chemin.size() << " pas" << std::endl;
@@ -78,11 +79,11 @@ int main() {
     } else {
         std::cout << "Aucun trajet principal trouvé." << std::endl;
     }
+    */
+
+    // --- RESOLUTION DES LABYRINTHES ---
     
-    // --- TESTS INDIVIDUELS DES LABYRINTHES ---
-    
-    // Pour déboguer ou tester des parties spécifiques
-    std::cout << "\n--- TESTS INDIVIDUELS DES LABYRINTHES ---\n" << std::endl;
+    std::cout << "\n--- RESOLUTION DES LABYRINTHES ---\n" << std::endl;
     std::vector<std::pair<int, int>> cheminBis;
     
     // Test du labyrinthe 1 (D → 1)
@@ -90,7 +91,6 @@ int main() {
     succes = labyrinthes[0].resoudreLabyrinthe1(cheminBis);
     
     if (succes) {
-        std::cout << "Chemin trouvé pour le labyrinthe 1!" << std::endl;
         std::cout << "Longueur du chemin: " << cheminBis.size() << " pas" << std::endl;
         labyrinthes[0].afficherAvecChemin(cheminBis, false);
     } else {
@@ -101,16 +101,11 @@ int main() {
     std::cout << "\nTest du labyrinthe 2 (1 → T)..." << std::endl;
 
     // Afficher les infos du labyrinthe 2
-    std::cout << "Position de la porte 1: " << labyrinthes[1].getPositionPorte1().first << ", " 
-        << labyrinthes[1].getPositionPorte1().second << std::endl;
-    std::cout << "Position de T: " << labyrinthes[1].getPositionTNT().first << ", " 
-        << labyrinthes[1].getPositionTNT().second << std::endl;
 
         cheminBis.clear();
     succes = labyrinthes[1].trouverChemin(labyrinthes[1].getPositionPorte1(), labyrinthes[1].getPositionTNT(), cheminBis);
 
     if (succes) {
-        std::cout << "Chemin trouvé de 1 à T dans le labyrinthe 2!" << std::endl;
         std::cout << "Longueur du chemin: " << cheminBis.size() << " pas" << std::endl;
         labyrinthes[1].afficherAvecChemin(cheminBis, false);
     } else {
@@ -123,49 +118,49 @@ int main() {
     succes = labyrinthes[3].trouverChemin(labyrinthes[1].getPositionTNT(), labyrinthes[3].getPositionPorte2(), cheminBis);
 
     if (succes) {
-        std::cout << "Chemin trouvé de T à 2 dans le labyrinthe 2 Prime!" << std::endl;
         std::cout << "Longueur du chemin: " << cheminBis.size() << " pas" << std::endl;
         labyrinthes[3].afficherAvecChemin(cheminBis, false);
     } else {
         std::cout << "Aucun chemin trouvé de T à 2 dans le labyrinthe 2 Prime." << std::endl;
     }
-
-    // Créer un chemin complet en combinant les deux chemins
-    // if (succes && !chemin2.empty() && !chemin2Prime.empty()) {
-    //     std::vector<std::pair<int, int>> cheminComplet = chemin2;
-    //     // Ajouter le chemin2Prime sans dupliquer le point T
-    //     cheminComplet.insert(cheminComplet.end(), chemin2Prime.begin() + 1, chemin2Prime.end());
-        
-    //     std::cout << "\nChemin complet (1 → T → 2):" << std::endl;
-    //     std::cout << "Longueur totale du chemin: " << cheminComplet.size() << " pas" << std::endl;
-    // }
     
     // Test du labyrinthe 3 (2 → A)
     std::cout << "\nTest du labyrinthe 3 (2 → A)..." << std::endl;
-    succes = labyrinthes[2].resoudreLabyrinthe3(chemin);
+    cheminBis.clear();
+    succes = labyrinthes[2].resoudreLabyrinthe3(cheminBis);
     
     if (succes) {
-        std::cout << "Chemin trouvé pour le labyrinthe 3!" << std::endl;
-        std::cout << "Longueur du chemin: " << chemin.size() << " pas" << std::endl;
-        labyrinthes[2].afficherAvecChemin(chemin, false);
+        std::cout << "Longueur du chemin: " << cheminBis.size() << " pas" << std::endl;
+        labyrinthes[2].afficherAvecChemin(cheminBis, false);
     } else {
         std::cout << "Aucun chemin trouvé pour le labyrinthe 3." << std::endl;
     }
+
+    auto fin = std::chrono::high_resolution_clock::now();
+    auto duree = std::chrono::duration_cast<std::chrono::milliseconds>(fin - debut).count();
+
+    std::cout << "Temps d'exécution: " << duree << " ms" << std::endl;
+
+
+
+
+    // --- COLLECTE DES OBJETS ---
     
-    // // Test de collecte des objets dans l'ordre C→B→E
-    // std::cout << "\nTest de collecte des objets (A→C→2, 2→B→1, 1→E→D)..." << std::endl;
+    // Collecte des objets dans l'ordre C→B→E
+    std::cout << "\nCollecte des objets (A→C→2, 2→B→1, 1→E→D)..." << std::endl;
     
-    // // Test de collecte de la couronne (A → C)
-    // std::vector<std::pair<int, int>> cheminC;
-    // std::cout << "- Collecte de la couronne (A → C)..." << std::endl;
-    // succes = labyrinthes[2].collecterCouronne(cheminC);
+    // Test de collecte de la couronne (A → C)
+    std::vector<std::pair<int, int>> cheminC;
+    std::cout << "- Collecte de la couronne (A → C)..." << std::endl;
+    succes = labyrinthes[2].collecterCouronne(cheminC) && labyrinthes[2].trouverChemin(labyrinthes[2].getPositionArrivee(), labyrinthes[2].getPositionPorte2(), cheminC);
     
-    // if (succes) {
-    //     std::cout << "Chemin trouvé pour la collecte de la couronne!" << std::endl;
-    //     std::cout << "Longueur: " << cheminC.size() << " pas" << std::endl;
-    // } else {
-    //     std::cout << "Impossible de collecter la couronne." << std::endl;
-    // }
+    if (succes) {
+        std::cout << "Chemin trouvé pour la collecte de la couronne!" << std::endl;
+        std::cout << "Longueur: " << cheminC.size() << " pas" << std::endl;
+        labyrinthes[2].afficherAvecChemin(cheminC, true);
+    } else {
+        std::cout << "Impossible de collecter la couronne." << std::endl;
+    }
     
     // // Test du chemin C → 2
     // std::vector<std::pair<int, int>> cheminC2;
