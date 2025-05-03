@@ -27,6 +27,12 @@ private:
                               std::vector<std::vector<bool>>& visite, 
                               std::vector<std::pair<int, int>>& chemin);
 
+    // Méthodes de backtracking parallèle
+    bool backtrackingParalleleBifurcations(int x, int y, int finX, int finY, 
+        std::vector<std::vector<bool>>& visite, 
+        std::vector<std::pair<int, int>>& chemin,
+        int profondeur);
+
 public:
     // Constructeur par défaut
     Labyrinthe();
@@ -36,7 +42,7 @@ public:
     
     // Constructeur avec une matrice 2D (nouveau)
     Labyrinthe(const std::vector<std::vector<char>>& grilleMatrice);
-    
+
     // Getters
     int getLargeur() const;
     int getHauteur() const;
@@ -68,24 +74,25 @@ public:
     bool trouverChemin(std::pair<int, int> debut, std::pair<int, int> fin, 
                      std::vector<std::pair<int, int>>& chemin);
     
-    // Nouvelles méthodes de résolution
+    // SEQUENTIEL
     bool resoudreTrajetPrincipal(std::vector<std::pair<int, int>>& chemin);
     bool collecterObjets(std::vector<std::pair<int, int>>& chemin);
     bool resoudreLabyrintheComplet(std::vector<std::pair<int, int>>& chemin);
     
-    // Méthodes pour résoudre chaque étape individuellement
     bool resoudreLabyrinthe1(std::vector<std::pair<int, int>>& chemin);
     bool resoudreLabyrinthe2(std::vector<std::pair<int, int>>& chemin);
     bool resoudreLabyrinthe2Prime(std::vector<std::pair<int, int>>& chemin);
     bool resoudreLabyrinthe3(std::vector<std::pair<int, int>>& chemin);
     
-    // Méthodes pour collecter chaque objet
     bool collecterCouronne(std::vector<std::pair<int, int>>& chemin);
     bool collecterBouclier(std::vector<std::pair<int, int>>& chemin);
     bool collecterEpee(std::vector<std::pair<int, int>>& chemin);
     
-    // Méthode pour résoudre un labyrinthe complet (pour compatibilité)
     bool resoudreLabyrinthes(std::vector<std::pair<int, int>>& chemin);
+
+    // PARALLELE
+    bool trouverCheminParalleleBifurcations(std::pair<int, int> debut, std::pair<int, int> fin, 
+        std::vector<std::pair<int, int>>& chemin);
 };
 
 #endif // LABYRINTHE_HPP

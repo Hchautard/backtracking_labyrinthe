@@ -68,7 +68,11 @@ bool Labyrinthe::estPositionValide(int x, int y) const {
 }
 
 bool Labyrinthe::estMur(int x, int y) const {
-    return getCase(x, y) == '#';
+    if (getCase(x,y) == '#' || getCase(x,y) == 'M') {
+        return true; 
+    } else {
+        return false; 
+    }
 }
 
 // Méthode pour trouver les positions spéciales dans le labyrinthe
