@@ -2,9 +2,9 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
-#include <future>
 #include <atomic>
 #include <vector>
+#include <condition_variable>
 
 // Mutex pour protéger les ressources partagées
 std::mutex mtx;
@@ -12,11 +12,13 @@ std::mutex mtx;
 // Variable atomique pour arrêter tous les threads lorsqu'une solution est trouvée
 std::atomic<bool> solutionTrouvee(false);
 
+// Condition variable pour synchroniser les threads
+std::condition_variable cv;
+
 // Version parallèle du backtracking qui lance un thread pour chaque bifurcation
 bool Labyrinthe::backtrackingParalleleBifurcations(int x, int y, int finX, int finY, 
                                        std::vector<std::vector<bool>>& visite, 
-                                       std::vector<std::pair<int, int>>& chemin,
-                                       int profondeur) {
+                                       std::vector<std::pair<int, int>>& chemin) {
     // Si une solution a déjà été trouvée par un autre thread, on s'arrête
     if (solutionTrouvee.load())
         return false;
@@ -37,6 +39,8 @@ bool Labyrinthe::backtrackingParalleleBifurcations(int x, int y, int finX, int f
     // Si nous avons atteint la destination
     if (x == finX && y == finY) {
         solutionTrouvee.store(true);
+        // Notifier tous les threads que la solution est trouvée
+        cv.notify_all();
         return true;
     }
     
@@ -44,73 +48,48 @@ bool Labyrinthe::backtrackingParalleleBifurcations(int x, int y, int finX, int f
     const int dx[] = {-1, 0, 1, 0};
     const int dy[] = {0, 1, 0, -1};
     
-    // Si nous sommes à une profondeur suffisante, on utilise le parallélisme
-    if (profondeur <= 2) { // Limiter la profondeur pour éviter trop de threads
-        std::vector<std::future<bool>> futures;
-        bool resultat = false;
+    std::vector<std::thread> threads;
+    std::atomic<bool> resultatLocal(false);
+    
+    // Lancer un thread pour chaque direction
+    for (int i = 0; i < 4; ++i) {
+        int nx = x + dx[i];
+        int ny = y + dy[i];
         
-        for (int i = 0; i < 4; ++i) {
-            int nx = x + dx[i];
-            int ny = y + dy[i];
-            
-            // Vérifier que la position est valide avant de lancer un thread
-            if (estPositionValide(nx, ny) && !visite[nx][ny]) {
-                // Créer une copie locale des structures pour chaque thread
-                auto futureResult = std::async(std::launch::async, [this, nx, ny, finX, finY, &visite, &chemin, profondeur]() {
-                    // Copie locale des structures partagées
-                    std::vector<std::vector<bool>> visiteLocale = visite;
-                    std::vector<std::pair<int, int>> cheminLocal = chemin;
-                    
-                    // Appel récursif avec profondeur+1
-                    bool res = backtrackingParalleleBifurcations(nx, ny, finX, finY, visiteLocale, cheminLocal, profondeur + 1);
-                    
+        // Vérifier que la position est valide avant de lancer un thread
+        if (estPositionValide(nx, ny) && !visite[nx][ny]) {
+            threads.emplace_back([this, nx, ny, finX, finY, &resultatLocal, &visite, &chemin]() {
+                // Copie locale des structures pour chaque thread
+                std::vector<std::vector<bool>> visiteLocale = visite;
+                std::vector<std::pair<int, int>> cheminLocal = chemin;
+                
+                // Appel récursif
+                if (backtrackingParalleleBifurcations(nx, ny, finX, finY, visiteLocale, cheminLocal)) {
                     // Si ce chemin a trouvé une solution, on met à jour le chemin global
-                    if (res) {
+                    {
                         std::lock_guard<std::mutex> lock(mtx);
                         chemin = cheminLocal; // Mettre à jour le chemin global
                     }
-                    
-                    return res;
-                });
-                
-                futures.push_back(std::move(futureResult));
-            }
+                    resultatLocal.store(true);
+                }
+            });
         }
-        
-        // Attendre que tous les threads terminent ou qu'une solution soit trouvée
-        for (auto& f : futures) {
-            if (f.get()) {
-                resultat = true;
-                break;
-            }
-        }
-        
-        if (!resultat) {
-            // Aucune direction ne mène à la solution, retirer cette position du chemin
-            std::lock_guard<std::mutex> lock(mtx);
-            chemin.pop_back();
-            visite[x][y] = false; // Démarquer cette cellule
-        }
-        
-        return resultat;
-    } 
-    else {
-        // Exécution séquentielle à grande profondeur
-        for (int i = 0; i < 4; ++i) {
-            int nx = x + dx[i];
-            int ny = y + dy[i];
-            
-            if (backtrackingParalleleBifurcations(nx, ny, finX, finY, visite, chemin, profondeur + 1)) {
-                return true;
-            }
-        }
-        
-        // Aucune direction ne mène à la solution, retirer cette position du chemin
+    }
+    
+    // Attendre que tous les threads terminent
+    for (auto& t : threads) {
+        t.join();
+    }
+    
+    // Si aucune direction n'a trouvé de solution, retirer cette position du chemin
+    if (!resultatLocal.load()) {
         std::lock_guard<std::mutex> lock(mtx);
         chemin.pop_back();
         visite[x][y] = false; // Démarquer cette cellule
         return false;
     }
+    
+    return true;
 }
 
 // Méthode pour trouver un chemin entre deux points en utilisant le backtracking parallèle
@@ -121,5 +100,5 @@ bool Labyrinthe::trouverCheminParalleleBifurcations(std::pair<int, int> debut, s
     solutionTrouvee.store(false); // Réinitialiser l'indicateur de solution
     
     // Démarrer le backtracking parallèle depuis la position de départ
-    return backtrackingParalleleBifurcations(debut.first, debut.second, fin.first, fin.second, visite, chemin, 0);
+    return backtrackingParalleleBifurcations(debut.first, debut.second, fin.first, fin.second, visite, chemin);
 }

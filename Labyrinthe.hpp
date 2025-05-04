@@ -30,8 +30,7 @@ private:
     // Méthodes de backtracking parallèle
     bool backtrackingParalleleBifurcations(int x, int y, int finX, int finY, 
         std::vector<std::vector<bool>>& visite, 
-        std::vector<std::pair<int, int>>& chemin,
-        int profondeur);
+        std::vector<std::pair<int, int>>& chemin);
 
 public:
     // Constructeur par défaut
