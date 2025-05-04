@@ -136,6 +136,31 @@ void collectionDesObjets(std::vector<Labyrinthe>& labyrinthes) {
     }
 }
 
+void resoudreRetourLabyrinthes(std::vector<Labyrinthe>& labyrinthes) {
+    std::vector<std::pair<int, int>> cheminRetour1;
+    std::vector<std::pair<int, int>> cheminRetour2;
+    std::vector<std::pair<int, int>> cheminRetour3;
+
+    // Retour à l'arrivée (E → 1 -> 2 -> A)
+    std::cout << "\nRetour à l'arrivée (E → 1 → 2 → A)..." << std::endl;
+    cheminRetour1.clear();
+    cheminRetour2.clear();
+    cheminRetour3.clear();
+    bool succes = labyrinthes[0].trouverChemin(labyrinthes[0].getPositionEpee(), labyrinthes[0].getPositionPorte1(), cheminRetour1)
+        && labyrinthes[3].trouverChemin(labyrinthes[3].getPositionPorte1(), labyrinthes[3].getPositionPorte2(), cheminRetour2)
+        && labyrinthes[2].trouverChemin(labyrinthes[2].getPositionPorte2(), labyrinthes[2].getPositionArrivee(), cheminRetour3);
+
+        if (succes) {
+        std::cout << "Chemin trouvé pour le retour à l'arrivée!" << std::endl;
+        labyrinthes[0].afficherAvecChemin(cheminRetour1, false);
+        labyrinthes[3].afficherAvecChemin(cheminRetour2, false);
+        labyrinthes[2].afficherAvecChemin(cheminRetour3, false);
+    } else {
+        std::cout << "Impossible de trouver un chemin pour le retour à l'arrivée." << std::endl;
+    }
+
+}
+
 int main() {
     // Charger les labyrinthes depuis le fichier
     std::vector<Labyrinthe> labyrinthes = Labyrinthe::loadFile("labyrinthe.txt");
@@ -155,66 +180,11 @@ int main() {
 
     // Collecte des objets
     collectionDesObjets(labyrinthes);
-    
-    // Essayer de résoudre le chemin principal d'abord
-    // std::cout << "Résolution du trajet principal (D → 1 → T → 2 → A)..." << std::endl;
-    // succes = labyrinthes[0].resoudreTrajetPrincipal(chemin);
-    
-    /**
-    if (succes) {
-        std::cout << "Trajet principal trouvé!" << std::endl;
-        std::cout << "Longueur du chemin: " << chemin.size() << " pas" << std::endl;
-        
-        // Créer une version fusionnée des labyrinthes pour l'affichage
-        Labyrinthe labyrintheFusionne = labyrinthes[0]; // Copie du premier labyrinthe
-        
-        // Afficher le chemin principal
-        labyrintheFusionne.afficherAvecChemin(chemin, false);
-        
-        // Ensuite collecter les objets selon le schéma A→C→2, 2→B→1, 1→E→D
-        std::cout << "\nRécupération des objets selon le schéma A→C→2, 2→B→1, 1→E→D..." << std::endl;
-        std::vector<std::pair<int, int>> cheminCollecte;
-        
-        succes = labyrinthes[0].collecterObjets(cheminCollecte);
-        
-        if (succes) {
-            std::cout << "Chemin de collecte des objets trouvé!" << std::endl;
-            std::cout << "Longueur du chemin de collecte: " << cheminCollecte.size() << " pas" << std::endl;
-            
-            // Combiner les chemins
-            std::vector<std::pair<int, int>> cheminComplet = chemin;
-            cheminComplet.insert(cheminComplet.end(), cheminCollecte.begin(), cheminCollecte.end());
-            
-            std::cout << "\nAffichage du chemin complet avec collecte des objets:" << std::endl;
-            labyrintheFusionne.afficherAvecChemin(cheminComplet, true);
-            
-            // Mesurer le temps total d'exécution
-            auto fin = std::chrono::high_resolution_clock::now();
-            auto duree = std::chrono::duration_cast<std::chrono::milliseconds>(fin - debut).count();
-            
-            std::cout << "\nChemin complet trouvé!" << std::endl;
-            std::cout << "Longueur totale du chemin: " << cheminComplet.size() << " pas" << std::endl;
-            std::cout << "Temps d'exécution: " << duree << " ms" << std::endl;
-            
-            // Afficher les étapes clés du chemin
-            std::cout << "\nPoints clés du chemin:" << std::endl;
-            for (size_t i = 0; i < cheminComplet.size(); ++i) {
-                char cellule = labyrintheFusionne.getCase(cheminComplet[i].first, cheminComplet[i].second);
-                if (cellule == 'D' || cellule == 'A' || cellule == 'E' || 
-                    cellule == 'B' || cellule == 'C' || 
-                    cellule == '1' || cellule == '2' || cellule == 'T') {
-                    std::cout << "Position (" << cheminComplet[i].first << ", " 
-                              << cheminComplet[i].second << ") [" << cellule << "]" << std::endl;
-                }
-            }
-        } else {
-            std::cout << "Impossible de collecter les objets selon le schéma spécifié." << std::endl;
-        }
-    } else {
-        std::cout << "Aucun trajet principal trouvé." << std::endl;
-    }
-    */
 
+    // Retour à l'arrivée
+    std::vector<std::pair<int, int>> cheminRetour;
+    resoudreRetourLabyrinthes(labyrinthes);
+    
     auto fin = std::chrono::high_resolution_clock::now();
     auto duree = std::chrono::duration_cast<std::chrono::milliseconds>(fin - debut).count();
 

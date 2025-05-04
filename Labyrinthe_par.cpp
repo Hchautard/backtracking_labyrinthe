@@ -6,24 +6,28 @@
 #include <vector>
 #include <condition_variable>
 
-// Mutex pour protéger les ressources partagées
 std::mutex mtx;
 
-// Variable atomique pour arrêter tous les threads lorsqu'une solution est trouvée
+// Pour arrêter tous les threads lorsqu'une solution est trouvée
 std::atomic<bool> solutionTrouvee(false);
 
 // Condition variable pour synchroniser les threads
 std::condition_variable cv;
 
-// Version parallèle du backtracking qui lance un thread pour chaque bifurcation
-bool Labyrinthe::backtrackingParalleleBifurcations(int x, int y, int finX, int finY, 
-                                       std::vector<std::vector<bool>>& visite, 
-                                       std::vector<std::pair<int, int>>& chemin) {
+bool Labyrinthe::backtrackingParalleleBifurcations(
+    int x, 
+    int y, 
+    int finX, 
+    int finY, 
+    std::vector<std::vector<bool>>& visite, 
+    std::vector<std::pair<int, int>>& chemin
+) {
     // Si une solution a déjà été trouvée par un autre thread, on s'arrête
-    if (solutionTrouvee.load())
+    if (solutionTrouvee.load()) {
         return false;
+    }
 
-    // Vérifier si la position est hors limites ou est un mur ou déjà visitée
+    // Vérifier la position
     if (!estPositionValide(x, y) || visite[x][y]) {
         return false;
     }
@@ -31,7 +35,6 @@ bool Labyrinthe::backtrackingParalleleBifurcations(int x, int y, int finX, int f
     // Section critique: modification des structures partagées
     {
         std::lock_guard<std::mutex> lock(mtx);
-        // Ajouter la position actuelle au chemin
         chemin.push_back({x, y});
         visite[x][y] = true;
     }
@@ -39,7 +42,7 @@ bool Labyrinthe::backtrackingParalleleBifurcations(int x, int y, int finX, int f
     // Si nous avons atteint la destination
     if (x == finX && y == finY) {
         solutionTrouvee.store(true);
-        // Notifier tous les threads que la solution est trouvée
+        // On notifie les autres threads
         cv.notify_all();
         return true;
     }
@@ -51,24 +54,25 @@ bool Labyrinthe::backtrackingParalleleBifurcations(int x, int y, int finX, int f
     std::vector<std::thread> threads;
     std::atomic<bool> resultatLocal(false);
     
-    // Lancer un thread pour chaque direction
     for (int i = 0; i < 4; ++i) {
         int nx = x + dx[i];
         int ny = y + dy[i];
         
-        // Vérifier que la position est valide avant de lancer un thread
+        // Vérifier que la position est valide
+        // Et qu'elle n'a pas été visitée
         if (estPositionValide(nx, ny) && !visite[nx][ny]) {
             threads.emplace_back([this, nx, ny, finX, finY, &resultatLocal, &visite, &chemin]() {
-                // Copie locale des structures pour chaque thread
+
+                // Copie des structures sinon risque de casser
+                // si passage par référence
                 std::vector<std::vector<bool>> visiteLocale = visite;
                 std::vector<std::pair<int, int>> cheminLocal = chemin;
                 
-                // Appel récursif
                 if (backtrackingParalleleBifurcations(nx, ny, finX, finY, visiteLocale, cheminLocal)) {
                     // Si ce chemin a trouvé une solution, on met à jour le chemin global
                     {
                         std::lock_guard<std::mutex> lock(mtx);
-                        chemin = cheminLocal; // Mettre à jour le chemin global
+                        chemin = cheminLocal; 
                     }
                     resultatLocal.store(true);
                 }
@@ -85,7 +89,7 @@ bool Labyrinthe::backtrackingParalleleBifurcations(int x, int y, int finX, int f
     if (!resultatLocal.load()) {
         std::lock_guard<std::mutex> lock(mtx);
         chemin.pop_back();
-        visite[x][y] = false; // Démarquer cette cellule
+        visite[x][y] = false;
         return false;
     }
     
@@ -97,7 +101,7 @@ bool Labyrinthe::trouverCheminParalleleBifurcations(std::pair<int, int> debut, s
                                        std::vector<std::pair<int, int>>& chemin) {
     std::vector<std::vector<bool>> visite(hauteur, std::vector<bool>(largeur, false));
     chemin.clear();
-    solutionTrouvee.store(false); // Réinitialiser l'indicateur de solution
+    solutionTrouvee.store(false); 
     
     // Démarrer le backtracking parallèle depuis la position de départ
     return backtrackingParalleleBifurcations(debut.first, debut.second, fin.first, fin.second, visite, chemin);

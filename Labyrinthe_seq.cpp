@@ -77,7 +77,7 @@ bool Labyrinthe::estMur(int x, int y) const {
 
 // Méthode pour trouver les positions spéciales dans le labyrinthe
 void Labyrinthe::trouverPositionsSpeciales() {
-    // Valeurs par défaut (position invalide)
+    // Valeurs par défaut
     positionDepart = {-1, -1};
     positionArrivee = {-1, -1};
     positionEpee = {-1, -1};
@@ -87,7 +87,7 @@ void Labyrinthe::trouverPositionsSpeciales() {
     positionPorte2 = {-1, -1};
     positionTNT = {-1, -1};
     
-    // Parcourir la grille pour trouver les positions spéciales
+    // Parcourir les grilles pour trouver les positions spéciales
     for (int i = 0; i < hauteur; ++i) {
         for (int j = 0; j < largeur; ++j) {
             char cellule = grille[i][j];
@@ -300,9 +300,11 @@ bool Labyrinthe::backtrackingSequentiel(int x, int y, int finX, int finY,
     return false;
 }
 
-// Méthode pour trouver un chemin entre deux points
-bool Labyrinthe::trouverChemin(std::pair<int, int> debut, std::pair<int, int> fin, 
-                             std::vector<std::pair<int, int>>& chemin) {
+bool Labyrinthe::trouverChemin(
+    std::pair<int, int> debut, 
+    std::pair<int, int> fin,                
+    std::vector<std::pair<int, int>>& chemin
+) {
     std::vector<std::vector<bool>> visite(hauteur, std::vector<bool>(largeur, false));
     chemin.clear();
     
@@ -322,25 +324,16 @@ bool Labyrinthe::resoudreTrajetPrincipal(std::vector<std::pair<int, int>>& chemi
     // Ajouter le chemin partiel au chemin complet
     chemin.insert(chemin.end(), cheminPartiel.begin(), cheminPartiel.end());
     
-    // Étape 2: De 1 à T
+    // Étape 2: De 1 à 2
     cheminPartiel.clear();
-    if (!trouverChemin(positionPorte1, positionTNT, cheminPartiel)) {
+    if (!trouverChemin(positionPorte1, positionPorte2, cheminPartiel)) {
         return false;
     }
     
     // Ajouter le reste du chemin (sans dupliquer la position 1)
     chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
     
-    // Étape 3: De T à 2
-    cheminPartiel.clear();
-    if (!trouverChemin(positionTNT, positionPorte2, cheminPartiel)) {
-        return false;
-    }
-    
-    // Ajouter le reste du chemin (sans dupliquer la position T)
-    chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
-    
-    // Étape 4: De 2 à A
+    // Étape 3: De 2 à A
     cheminPartiel.clear();
     if (!trouverChemin(positionPorte2, positionArrivee, cheminPartiel)) {
         return false;
@@ -514,31 +507,6 @@ bool Labyrinthe::resoudreLabyrinthe2Prime(std::vector<std::pair<int, int>>& chem
     
     return true;
 }
-
-// Méthode pour résoudre le deuxième labyrinthe après explosion du mur (1 → T → 2)
-// bool Labyrinthe::resoudreLabyrinthe2Prime(std::vector<std::pair<int, int>>& chemin) {
-//     std::vector<std::pair<int, int>> cheminPartiel;
-//     chemin.clear();
-    
-//     // Étape 1: De 1 à T
-//     if (!trouverChemin(positionPorte1, positionTNT, cheminPartiel)) {
-//         return false;
-//     }
-    
-//     // Ajouter le chemin partiel au chemin complet
-//     chemin.insert(chemin.end(), cheminPartiel.begin(), cheminPartiel.end());
-    
-//     // Étape 2: De T à 2
-//     cheminPartiel.clear();
-//     if (!trouverChemin(positionTNT, positionPorte2, cheminPartiel)) {
-//         return false;
-//     }
-    
-//     // Ajouter le reste du chemin (sans dupliquer la position T)
-//     chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
-    
-//     return true;
-// }
 
 // Méthode pour résoudre le troisième labyrinthe (2 → A)
 bool Labyrinthe::resoudreLabyrinthe3(std::vector<std::pair<int, int>>& chemin) {

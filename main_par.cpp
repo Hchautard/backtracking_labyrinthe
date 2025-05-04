@@ -12,9 +12,6 @@ void resolutionParalleleParBifurcations(std::vector<Labyrinthe>& labyrinthes) {
     
     std::cout << "\n--- RESOLUTION PARALLELE PAR BIFURCATIONS ---\n" << std::endl;
     
-    // Mesurer le temps d'exécution
-    auto debut = std::chrono::high_resolution_clock::now();
-    
     // Test du labyrinthe 1 (D → 1)
     std::cout << "Test parallèle du labyrinthe 1 (D → 1)..." << std::endl;
     succes = labyrinthes[0].trouverCheminParalleleBifurcations(
@@ -81,11 +78,7 @@ void resolutionParalleleParBifurcations(std::vector<Labyrinthe>& labyrinthes) {
     } else {
         std::cout << "Aucun chemin trouvé pour le labyrinthe 3." << std::endl;
     }
-    
-    // Calculer le temps total
-    auto fin = std::chrono::high_resolution_clock::now();
-    auto duree = std::chrono::duration_cast<std::chrono::milliseconds>(fin - debut).count();
-    std::cout << "\nTemps d'exécution parallèle par bifurcations: " << duree << " ms" << std::endl;
+
 }
 
 // Test de collecte des objets en parallèle
@@ -93,9 +86,6 @@ void collectionDesObjetsParallele(std::vector<Labyrinthe>& labyrinthes) {
     bool succes = false;
     
     std::cout << "\n--- COLLECTE DES OBJETS EN PARALLELE ---\n" << std::endl;
-    
-    // Mesurer le temps d'exécution
-    auto debut = std::chrono::high_resolution_clock::now();
     
     // Test de collecte de la couronne (A → C)
     std::vector<std::pair<int, int>> cheminC;
@@ -148,10 +138,40 @@ void collectionDesObjetsParallele(std::vector<Labyrinthe>& labyrinthes) {
         std::cout << "Impossible de collecter le bouclier." << std::endl;
     }
     
-    // Calculer le temps total
-    auto fin = std::chrono::high_resolution_clock::now();
-    auto duree = std::chrono::duration_cast<std::chrono::milliseconds>(fin - debut).count();
-    std::cout << "\nTemps d'exécution de la collecte des objets en parallèle: " << duree << " ms" << std::endl;
+}
+
+void resoudreRetourLabyrinthes(std::vector<Labyrinthe>& labyrinthes) {
+    std::vector<std::pair<int, int>> cheminRetour1;
+    std::vector<std::pair<int, int>> cheminRetour2;
+    std::vector<std::pair<int, int>> cheminRetour3;
+
+    // Retour à l'arrivée (E → 1 -> 2 → A)
+    std::cout << "\nRetour à l'arrivée (E → 1 → 2 → A)..." << std::endl;
+    cheminRetour1.clear();
+    cheminRetour2.clear();
+    cheminRetour3.clear();
+    bool succes = labyrinthes[0].trouverCheminParalleleBifurcations(
+        labyrinthes[0].getPositionEpee(), 
+        labyrinthes[0].getPositionPorte1(), 
+        cheminRetour1
+    ) && labyrinthes[3].trouverCheminParalleleBifurcations(
+        labyrinthes[3].getPositionPorte1(), 
+        labyrinthes[3].getPositionPorte2(), 
+        cheminRetour2
+    ) && labyrinthes[2].trouverCheminParalleleBifurcations(
+        labyrinthes[2].getPositionPorte2(), 
+        labyrinthes[2].getPositionArrivee(), 
+        cheminRetour3
+    );
+
+    if (succes) {
+        std::cout << "Chemin trouvé pour le retour à l'arrivée!" << std::endl;
+        labyrinthes[0].afficherAvecChemin(cheminRetour1, false);
+        labyrinthes[3].afficherAvecChemin(cheminRetour2, false);
+        labyrinthes[2].afficherAvecChemin(cheminRetour3, false);
+    } else {
+        std::cout << "Impossible de trouver un chemin pour le retour à l'arrivée." << std::endl;
+    }
 }
 
 int main() {
@@ -164,13 +184,24 @@ int main() {
     }
     
     std::cout << "Nombre de labyrinthes chargés: " << labyrinthes.size() << std::endl;
-    std::cout << "Nombre de threads disponibles: " << std::thread::hardware_concurrency() << std::endl;
+
+    // Mesurer le temps d'exécution
+    auto debut = std::chrono::high_resolution_clock::now();
     
     // Résolution parallèle
     resolutionParalleleParBifurcations(labyrinthes);
     
     // Collecte des objets en parallèle
-    // collectionDesObjetsParallele(labyrinthes);
+    collectionDesObjetsParallele(labyrinthes);
+
+    // Retour à l'arrivée
+    std::vector<std::pair<int, int>> cheminRetour;
+    resoudreRetourLabyrinthes(labyrinthes);
+
+    auto fin = std::chrono::high_resolution_clock::now();
+    auto duree = std::chrono::duration_cast<std::chrono::milliseconds>(fin - debut).count();
+
+    std::cout << "Temps d'exécution séquentielle: " << duree << " ms" << std::endl;
     
     return 0;
 }
