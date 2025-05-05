@@ -14,12 +14,12 @@ Labyrinthe::Labyrinthe() : largeur(0), hauteur(0) {}
 // Constructeur avec un vecteur de chaînes
 Labyrinthe::Labyrinthe(const std::vector<std::string>& grilleLabyrinthe) {
     hauteur = grilleLabyrinthe.size();
-    largeur = (hauteur > 0) ? grilleLabyrinthe[0].size() : 0;
+    largeur = (hauteur > 0) ? grilleLabyrinthe.size() : 0;
     
     // Convertir les chaînes en matrice 2D de caractères
     grille.resize(hauteur, std::vector<char>(largeur));
-    for (int i = 0; i < hauteur; ++i) {
-        for (int j = 0; j < largeur; ++j) {
+    for (size_t i = 0; i < static_cast<size_t>(hauteur); ++i) {
+        for (size_t j = 0; j < static_cast<size_t>(largeur); ++j) {
             grille[i][j] = (j < grilleLabyrinthe[i].size()) ? grilleLabyrinthe[i][j] : ' ';
         }
     }
