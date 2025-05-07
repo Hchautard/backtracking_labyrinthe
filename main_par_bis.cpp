@@ -8,7 +8,6 @@
 // Mutex pour l'affichage synchronisé
 std::mutex coutMutex;
 
-// Fonction pour résoudre le labyrinthe 1 (D -> 1) dans un thread
 void resoudreLabyrinthe1Thread(Labyrinthe& lab) {
     std::vector<std::pair<int, int>> chemin;
     bool succes = lab.resoudreLabyrinthe1(chemin);
@@ -25,7 +24,6 @@ void resoudreLabyrinthe1Thread(Labyrinthe& lab) {
     }
 }
 
-// Fonction pour résoudre le labyrinthe 2 (1 -> T) dans un thread
 void resoudreLabyrinthe2Thread(Labyrinthe& lab) {
     std::vector<std::pair<int, int>> chemin;
     bool succes = lab.trouverChemin(lab.getPositionPorte1(), lab.getPositionTNT(), chemin);
@@ -42,7 +40,6 @@ void resoudreLabyrinthe2Thread(Labyrinthe& lab) {
     }
 }
 
-// Fonction pour résoudre le labyrinthe 2 Prime (T -> 2) dans un thread
 void resoudreLabyrinthe2PrimeThread(Labyrinthe& lab, const std::pair<int, int>& positionTNT) {
     std::vector<std::pair<int, int>> chemin;
     bool succes = lab.trouverChemin(positionTNT, lab.getPositionPorte2(), chemin);
@@ -59,7 +56,6 @@ void resoudreLabyrinthe2PrimeThread(Labyrinthe& lab, const std::pair<int, int>& 
     }
 }
 
-// Fonction pour résoudre le labyrinthe 3 (2 -> A) dans un thread
 void resoudreLabyrinthe3Thread(Labyrinthe& lab) {
     std::vector<std::pair<int, int>> chemin;
     bool succes = lab.resoudreLabyrinthe3(chemin);
@@ -76,7 +72,6 @@ void resoudreLabyrinthe3Thread(Labyrinthe& lab) {
     }
 }
 
-// Fonction pour collecter la couronne (A -> C) dans un thread
 void collecterCouronneThread(Labyrinthe& lab) {
     std::vector<std::pair<int, int>> chemin;
     bool succes = lab.collecterCouronne(chemin);
@@ -112,7 +107,6 @@ void cheminC2Thread(Labyrinthe& lab) {
     }
 }
 
-// Fonction pour collecter le bouclier (2 -> B) dans un thread
 void collecterBouclierThread(Labyrinthe& lab) {
     std::vector<std::pair<int, int>> chemin;
     bool succes = lab.trouverChemin(lab.getPositionPorte2(), lab.getPositionBouclier(), chemin);
@@ -221,7 +215,7 @@ void resolutionDesLabyrinthesParallele(std::vector<Labyrinthe>& labyrinthes) {
     // Affichage synchronisé
     {
         std::lock_guard<std::mutex> lock(coutMutex);
-        std::cout << "\n--- RESOLUTION PARALLELE DES LABYRINTHES ---\n" << std::endl;
+        std::cout << "\n--- RESOLUTION PARALLELE BIS DES LABYRINTHES ---\n" << std::endl;
     }
     
     // Créer les threads pour résoudre chaque labyrinthe en parallèle
