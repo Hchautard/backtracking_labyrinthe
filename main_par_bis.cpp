@@ -3,174 +3,286 @@
 #include <vector>
 #include <chrono>
 #include <thread>
+#include <mutex>
 
-// Fonction pour tester la résolution parallèle par bifurcations
-void resolutionParalleleParBifurcations(std::vector<Labyrinthe>& labyrinthes) {
-    // Variables pour stocker le chemin
+// Mutex pour l'affichage synchronisé
+std::mutex coutMutex;
+
+// Fonction pour résoudre le labyrinthe 1 (D -> 1) dans un thread
+void resoudreLabyrinthe1Thread(Labyrinthe& lab) {
     std::vector<std::pair<int, int>> chemin;
-    bool succes = false;
+    bool succes = lab.resoudreLabyrinthe1(chemin);
     
-    std::cout << "\n--- RESOLUTION PARALLELE PAR BIFURCATIONS ---\n" << std::endl;
-    
-    // Test du labyrinthe 1 (D → 1)
-    std::cout << "Test parallèle du labyrinthe 1 (D → 1)..." << std::endl;
-    succes = labyrinthes[0].trouverCheminParalleleBifurcations(
-        labyrinthes[0].getPositionDepart(), 
-        labyrinthes[0].getPositionPorte1(), 
-        chemin
-    );
+    // Sécuriser l'affichage avec un mutex
+    std::lock_guard<std::mutex> lock(coutMutex);
+    std::cout << "\nTest du labyrinthe 1 (D → 1)..." << std::endl;
     
     if (succes) {
-        std::cout << "Chemin trouvé pour le labyrinthe 1!" << std::endl;
         std::cout << "Longueur du chemin: " << chemin.size() << " pas" << std::endl;
-        labyrinthes[0].afficherAvecChemin(chemin, false);
+        lab.afficherAvecChemin(chemin, false);
     } else {
         std::cout << "Aucun chemin trouvé pour le labyrinthe 1." << std::endl;
     }
+}
+
+// Fonction pour résoudre le labyrinthe 2 (1 -> T) dans un thread
+void resoudreLabyrinthe2Thread(Labyrinthe& lab) {
+    std::vector<std::pair<int, int>> chemin;
+    bool succes = lab.trouverChemin(lab.getPositionPorte1(), lab.getPositionTNT(), chemin);
     
-    // Test du labyrinthe 2 (1 → T)
-    std::cout << "\nTest parallèle du labyrinthe 2 (1 → T)..." << std::endl;
-    chemin.clear();
-    succes = labyrinthes[1].trouverCheminParalleleBifurcations(
-        labyrinthes[1].getPositionPorte1(), 
-        labyrinthes[1].getPositionTNT(), 
-        chemin
-    );
+    // Sécuriser l'affichage avec un mutex
+    std::lock_guard<std::mutex> lock(coutMutex);
+    std::cout << "\nTest du labyrinthe 2 (1 → T)..." << std::endl;
     
     if (succes) {
-        std::cout << "Chemin trouvé de 1 à T dans le labyrinthe 2!" << std::endl;
         std::cout << "Longueur du chemin: " << chemin.size() << " pas" << std::endl;
-        labyrinthes[1].afficherAvecChemin(chemin, false);
+        lab.afficherAvecChemin(chemin, false);
     } else {
         std::cout << "Aucun chemin trouvé de 1 à T dans le labyrinthe 2." << std::endl;
     }
+}
+
+// Fonction pour résoudre le labyrinthe 2 Prime (T -> 2) dans un thread
+void resoudreLabyrinthe2PrimeThread(Labyrinthe& lab, const std::pair<int, int>& positionTNT) {
+    std::vector<std::pair<int, int>> chemin;
+    bool succes = lab.trouverChemin(positionTNT, lab.getPositionPorte2(), chemin);
     
-    // Test du labyrinthe 2 Prime (T → 2)
-    std::cout << "\nTest parallèle du labyrinthe 2 Prime (T → 2)..." << std::endl;
-    chemin.clear();
-    succes = labyrinthes[3].trouverCheminParalleleBifurcations(
-        labyrinthes[1].getPositionTNT(), 
-        labyrinthes[3].getPositionPorte2(), 
-        chemin
-    );
+    // Sécuriser l'affichage avec un mutex
+    std::lock_guard<std::mutex> lock(coutMutex);
+    std::cout << "\nTest du labyrinthe 2 Prime (T → 2)..." << std::endl;
     
     if (succes) {
-        std::cout << "Chemin trouvé de T à 2 dans le labyrinthe 2 Prime!" << std::endl;
         std::cout << "Longueur du chemin: " << chemin.size() << " pas" << std::endl;
-        labyrinthes[3].afficherAvecChemin(chemin, false);
+        lab.afficherAvecChemin(chemin, false);
     } else {
         std::cout << "Aucun chemin trouvé de T à 2 dans le labyrinthe 2 Prime." << std::endl;
     }
+}
+
+// Fonction pour résoudre le labyrinthe 3 (2 -> A) dans un thread
+void resoudreLabyrinthe3Thread(Labyrinthe& lab) {
+    std::vector<std::pair<int, int>> chemin;
+    bool succes = lab.resoudreLabyrinthe3(chemin);
     
-    // Test du labyrinthe 3 (2 → A)
-    std::cout << "\nTest parallèle du labyrinthe 3 (2 → A)..." << std::endl;
-    chemin.clear();
-    succes = labyrinthes[2].trouverCheminParalleleBifurcations(
-        labyrinthes[2].getPositionPorte2(), 
-        labyrinthes[2].getPositionArrivee(), 
-        chemin
-    );
+    // Sécuriser l'affichage avec un mutex
+    std::lock_guard<std::mutex> lock(coutMutex);
+    std::cout << "\nTest du labyrinthe 3 (2 → A)..." << std::endl;
     
     if (succes) {
-        std::cout << "Chemin trouvé pour le labyrinthe 3!" << std::endl;
         std::cout << "Longueur du chemin: " << chemin.size() << " pas" << std::endl;
-        labyrinthes[2].afficherAvecChemin(chemin, false);
+        lab.afficherAvecChemin(chemin, false);
     } else {
         std::cout << "Aucun chemin trouvé pour le labyrinthe 3." << std::endl;
     }
-
 }
 
-// Test de collecte des objets en parallèle
-void collectionDesObjetsParallele(std::vector<Labyrinthe>& labyrinthes) {
-    bool succes = false;
+// Fonction pour collecter la couronne (A -> C) dans un thread
+void collecterCouronneThread(Labyrinthe& lab) {
+    std::vector<std::pair<int, int>> chemin;
+    bool succes = lab.collecterCouronne(chemin);
     
-    std::cout << "\n--- COLLECTE DES OBJETS EN PARALLELE ---\n" << std::endl;
-    
-    // Test de collecte de la couronne (A → C)
-    std::vector<std::pair<int, int>> cheminC;
+    // Sécuriser l'affichage avec un mutex
+    std::lock_guard<std::mutex> lock(coutMutex);
     std::cout << "- Collecte de la couronne (A → C)..." << std::endl;
-    succes = labyrinthes[2].trouverCheminParalleleBifurcations(
-        labyrinthes[2].getPositionArrivee(),
-        labyrinthes[2].getPositionCouronne(),
-        cheminC
-    );
-
+    
     if (succes) {
         std::cout << "Chemin trouvé pour la collecte de la couronne!" << std::endl;
-        std::cout << "Longueur: " << cheminC.size() << " pas" << std::endl;
-        labyrinthes[2].afficherAvecChemin(cheminC, true);
+        std::cout << "Longueur: " << chemin.size() << " pas" << std::endl;
+        lab.afficherAvecChemin(chemin, true);
     } else {
         std::cout << "Impossible de collecter la couronne." << std::endl;
     }
+}
 
-    // Test du chemin C → 2
-    std::vector<std::pair<int, int>> cheminC2;
+// Fonction pour trouver le chemin de C à la porte 2 dans un thread
+void cheminC2Thread(Labyrinthe& lab) {
+    std::vector<std::pair<int, int>> chemin;
+    bool succes = lab.trouverChemin(lab.getPositionCouronne(), lab.getPositionPorte2(), chemin);
+    
+    // Sécuriser l'affichage avec un mutex
+    std::lock_guard<std::mutex> lock(coutMutex);
     std::cout << "- Chemin de C à la porte 2..." << std::endl;
-    succes = labyrinthes[2].trouverCheminParalleleBifurcations(
-        labyrinthes[2].getPositionCouronne(),
-        labyrinthes[2].getPositionPorte2(),
-        cheminC2
-    );
-
+    
     if (succes) {
         std::cout << "Chemin trouvé de C à la porte 2!" << std::endl;
-        std::cout << "Longueur: " << cheminC2.size() << " pas" << std::endl;
-        labyrinthes[2].afficherAvecChemin(cheminC2, true);
+        std::cout << "Longueur: " << chemin.size() << " pas" << std::endl;
+        lab.afficherAvecChemin(chemin, true);
     } else {
         std::cout << "Impossible de trouver un chemin de C à la porte 2." << std::endl;
     }
+}
 
-    // Test de collecte du bouclier (2 → B)
-    std::vector<std::pair<int, int>> cheminB;
+// Fonction pour collecter le bouclier (2 -> B) dans un thread
+void collecterBouclierThread(Labyrinthe& lab) {
+    std::vector<std::pair<int, int>> chemin;
+    bool succes = lab.trouverChemin(lab.getPositionPorte2(), lab.getPositionBouclier(), chemin);
+    
+    // Sécuriser l'affichage avec un mutex
+    std::lock_guard<std::mutex> lock(coutMutex);
     std::cout << "- Collecte du bouclier (2 → B)..." << std::endl;
-    succes = labyrinthes[3].trouverCheminParalleleBifurcations(
-        labyrinthes[3].getPositionPorte2(),
-        labyrinthes[3].getPositionBouclier(),
-        cheminB
-    );
-
+    
     if (succes) {
         std::cout << "Chemin trouvé pour la collecte du bouclier!" << std::endl;
-        std::cout << "Longueur: " << cheminB.size() << " pas" << std::endl;
-        labyrinthes[3].afficherAvecChemin(cheminB, true);
+        std::cout << "Longueur: " << chemin.size() << " pas" << std::endl;
+        lab.afficherAvecChemin(chemin, true);
     } else {
         std::cout << "Impossible de collecter le bouclier." << std::endl;
     }
-    
 }
 
-void resoudreRetourLabyrinthes(std::vector<Labyrinthe>& labyrinthes) {
-    std::vector<std::pair<int, int>> cheminRetour1;
-    std::vector<std::pair<int, int>> cheminRetour2;
-    std::vector<std::pair<int, int>> cheminRetour3;
-
-    // Retour à l'arrivée (E → 1 -> 2 → A)
-    std::cout << "\nRetour à l'arrivée (E → 1 → 2 → A)..." << std::endl;
-    cheminRetour1.clear();
-    cheminRetour2.clear();
-    cheminRetour3.clear();
-    bool succes = labyrinthes[0].trouverCheminParalleleBifurcations(
-        labyrinthes[0].getPositionEpee(), 
-        labyrinthes[0].getPositionPorte1(), 
-        cheminRetour1
-    ) && labyrinthes[3].trouverCheminParalleleBifurcations(
-        labyrinthes[3].getPositionPorte1(), 
-        labyrinthes[3].getPositionPorte2(), 
-        cheminRetour2
-    ) && labyrinthes[2].trouverCheminParalleleBifurcations(
-        labyrinthes[2].getPositionPorte2(), 
-        labyrinthes[2].getPositionArrivee(), 
-        cheminRetour3
-    );
-
+// Fonction pour trouver le chemin de B à la porte 1 dans un thread
+void cheminB1Thread(Labyrinthe& lab) {
+    std::vector<std::pair<int, int>> chemin;
+    bool succes = lab.trouverChemin(lab.getPositionBouclier(), lab.getPositionPorte1(), chemin);
+    
+    // Sécuriser l'affichage avec un mutex
+    std::lock_guard<std::mutex> lock(coutMutex);
+    std::cout << "- Chemin de B à la porte 1..." << std::endl;
+    
     if (succes) {
-        std::cout << "Chemin trouvé pour le retour à l'arrivée!" << std::endl;
-        labyrinthes[0].afficherAvecChemin(cheminRetour1, false);
-        labyrinthes[3].afficherAvecChemin(cheminRetour2, false);
-        labyrinthes[2].afficherAvecChemin(cheminRetour3, false);
+        std::cout << "Chemin trouvé de B à la porte 1!" << std::endl;
+        std::cout << "Longueur: " << chemin.size() << " pas" << std::endl;
+        lab.afficherAvecChemin(chemin, true);
     } else {
-        std::cout << "Impossible de trouver un chemin pour le retour à l'arrivée." << std::endl;
+        std::cout << "Impossible de trouver un chemin de B à la porte 1." << std::endl;
+    }
+}
+
+// Fonction pour collecter l'épée (1 -> E) dans un thread
+void collecterEpeeThread(Labyrinthe& lab) {
+    std::vector<std::pair<int, int>> chemin;
+    bool succes = lab.collecterEpee(chemin);
+    
+    // Sécuriser l'affichage avec un mutex
+    std::lock_guard<std::mutex> lock(coutMutex);
+    std::cout << "- Collecte de l'épée (1 → E)..." << std::endl;
+    
+    if (succes) {
+        std::cout << "Chemin trouvé pour la collecte de l'épée!" << std::endl;
+        std::cout << "Longueur: " << chemin.size() << " pas" << std::endl;
+        lab.afficherAvecChemin(chemin, true);
+    } else {
+        std::cout << "Impossible de collecter l'épée." << std::endl;
+    }
+}
+
+// Fonction pour résoudre le retour du labyrinthe E -> 1 dans un thread
+void retourE1Thread(Labyrinthe& lab) {
+    std::vector<std::pair<int, int>> chemin;
+    bool succes = lab.trouverChemin(lab.getPositionEpee(), lab.getPositionPorte1(), chemin);
+    
+    // Sécuriser l'affichage avec un mutex
+    std::lock_guard<std::mutex> lock(coutMutex);
+    
+    if (succes) {
+        std::cout << "Chemin trouvé pour le retour de E à 1!" << std::endl;
+        lab.afficherAvecChemin(chemin, false);
+    } else {
+        std::cout << "Impossible de trouver un chemin pour le retour de E à 1." << std::endl;
+    }
+}
+
+// Fonction pour résoudre le retour du labyrinthe 1 -> 2 dans un thread
+void retour12Thread(Labyrinthe& lab) {
+    std::vector<std::pair<int, int>> chemin;
+    bool succes = lab.trouverChemin(lab.getPositionPorte1(), lab.getPositionPorte2(), chemin);
+    
+    // Sécuriser l'affichage avec un mutex
+    std::lock_guard<std::mutex> lock(coutMutex);
+    
+    if (succes) {
+        std::cout << "Chemin trouvé pour le retour de 1 à 2!" << std::endl;
+        lab.afficherAvecChemin(chemin, false);
+    } else {
+        std::cout << "Impossible de trouver un chemin pour le retour de 1 à 2." << std::endl;
+    }
+}
+
+// Fonction pour résoudre le retour du labyrinthe 2 -> A dans un thread
+void retour2AThread(Labyrinthe& lab) {
+    std::vector<std::pair<int, int>> chemin;
+    bool succes = lab.trouverChemin(lab.getPositionPorte2(), lab.getPositionArrivee(), chemin);
+    
+    // Sécuriser l'affichage avec un mutex
+    std::lock_guard<std::mutex> lock(coutMutex);
+    
+    if (succes) {
+        std::cout << "Chemin trouvé pour le retour de 2 à A!" << std::endl;
+        lab.afficherAvecChemin(chemin, false);
+    } else {
+        std::cout << "Impossible de trouver un chemin pour le retour de 2 à A." << std::endl;
+    }
+}
+
+// Fonction pour résoudre tous les labyrinthes en parallèle
+void resolutionDesLabyrinthesParallele(std::vector<Labyrinthe>& labyrinthes) {
+    std::vector<std::thread> threads;
+    
+    // Affichage synchronisé
+    {
+        std::lock_guard<std::mutex> lock(coutMutex);
+        std::cout << "\n--- RESOLUTION PARALLELE DES LABYRINTHES ---\n" << std::endl;
+    }
+    
+    // Créer les threads pour résoudre chaque labyrinthe en parallèle
+    threads.push_back(std::thread(resoudreLabyrinthe1Thread, std::ref(labyrinthes[0])));
+    threads.push_back(std::thread(resoudreLabyrinthe2Thread, std::ref(labyrinthes[1])));
+    threads.push_back(std::thread(resoudreLabyrinthe2PrimeThread, std::ref(labyrinthes[3]), labyrinthes[1].getPositionTNT()));
+    threads.push_back(std::thread(resoudreLabyrinthe3Thread, std::ref(labyrinthes[2])));
+    
+    // Attendre que tous les threads terminent
+    for (auto& t : threads) {
+        if (t.joinable()) {
+            t.join();
+        }
+    }
+}
+
+// Fonction pour collecter les objets en parallèle
+void collectionDesObjetsParallele(std::vector<Labyrinthe>& labyrinthes) {
+    std::vector<std::thread> threads;
+    
+    // Affichage synchronisé
+    {
+        std::lock_guard<std::mutex> lock(coutMutex);
+        std::cout << "\nCollecte des objets (A→C→2, 2→B→1, 1→E)..." << std::endl;
+    }
+    
+    // Créer les threads pour collecter chaque objet en parallèle
+    threads.push_back(std::thread(collecterCouronneThread, std::ref(labyrinthes[2])));
+    threads.push_back(std::thread(cheminC2Thread, std::ref(labyrinthes[2])));
+    threads.push_back(std::thread(collecterBouclierThread, std::ref(labyrinthes[3])));
+    threads.push_back(std::thread(cheminB1Thread, std::ref(labyrinthes[3])));
+    threads.push_back(std::thread(collecterEpeeThread, std::ref(labyrinthes[0])));
+    
+    // Attendre que tous les threads terminent
+    for (auto& t : threads) {
+        if (t.joinable()) {
+            t.join();
+        }
+    }
+}
+
+// Fonction pour résoudre le retour en parallèle
+void resoudreRetourLabyrinthesParallele(std::vector<Labyrinthe>& labyrinthes) {
+    std::vector<std::thread> threads;
+    
+    // Affichage synchronisé
+    {
+        std::lock_guard<std::mutex> lock(coutMutex);
+        std::cout << "\nRetour à l'arrivée (E → 1 → 2 → A)..." << std::endl;
+    }
+    
+    // Créer les threads pour résoudre chaque partie du retour en parallèle
+    threads.push_back(std::thread(retourE1Thread, std::ref(labyrinthes[0])));
+    threads.push_back(std::thread(retour12Thread, std::ref(labyrinthes[3])));
+    threads.push_back(std::thread(retour2AThread, std::ref(labyrinthes[2])));
+    
+    // Attendre que tous les threads terminent
+    for (auto& t : threads) {
+        if (t.joinable()) {
+            t.join();
+        }
     }
 }
 
@@ -184,24 +296,23 @@ int main() {
     }
     
     std::cout << "Nombre de labyrinthes chargés: " << labyrinthes.size() << std::endl;
-
+    
     // Mesurer le temps d'exécution
     auto debut = std::chrono::high_resolution_clock::now();
     
-    // Résolution parallèle
-    resolutionParalleleParBifurcations(labyrinthes);
+    // Résolution des labyrinthes en parallèle
+    resolutionDesLabyrinthesParallele(labyrinthes);
     
     // Collecte des objets en parallèle
     collectionDesObjetsParallele(labyrinthes);
-
-    // Retour à l'arrivée
-    std::vector<std::pair<int, int>> cheminRetour;
-    resoudreRetourLabyrinthes(labyrinthes);
-
+    
+    // Retour à l'arrivée en parallèle
+    resoudreRetourLabyrinthesParallele(labyrinthes);
+    
     auto fin = std::chrono::high_resolution_clock::now();
     auto duree = std::chrono::duration_cast<std::chrono::milliseconds>(fin - debut).count();
-
-    std::cout << "Temps d'exécution séquentielle: " << duree << " ms" << std::endl;
+    
+    std::cout << "Temps d'exécution parallèle: " << duree << " ms" << std::endl;
     
     return 0;
 }

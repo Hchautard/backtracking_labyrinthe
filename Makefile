@@ -10,7 +10,7 @@ TARGET_PAR_BIS = labyrinthe_par_bis
 # Fichiers source
 SRC_SEQ = main.cpp Labyrinthe_seq.cpp
 SRC_PAR = main_par.cpp Labyrinthe_par.cpp Labyrinthe_seq.cpp
-SRC_PAR_BIS = main_par_bis.cpp Labyrinthe_par_bis.cpp Labyrinthe_seq.cpp
+SRC_PAR_BIS = main_par_bis.cpp Labyrinthe_seq.cpp
 
 # Objets
 OBJ_SEQ = $(SRC_SEQ:.cpp=.o)
