@@ -74,9 +74,7 @@ public:
                      std::vector<std::pair<int, int>>& chemin);
     
     // SEQUENTIEL
-    bool resoudreTrajetPrincipal(std::vector<std::pair<int, int>>& chemin);
     bool collecterObjets(std::vector<std::pair<int, int>>& chemin);
-    bool resoudreLabyrintheComplet(std::vector<std::pair<int, int>>& chemin);
     
     bool resoudreLabyrinthe1(std::vector<std::pair<int, int>>& chemin);
     bool resoudreLabyrinthe2(std::vector<std::pair<int, int>>& chemin);

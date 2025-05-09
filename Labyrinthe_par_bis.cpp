@@ -121,7 +121,7 @@ void Labyrinthe::afficherAvecChemin(const std::vector<std::pair<int, int>>& chem
     std::vector<std::vector<char>> grilleTemp = grille;
     
     // Marquer le chemin avec des '*'
-    for (const auto& position : chemin) {
+    for (const std::pair<int, int>& position : chemin) {
         int x = position.first;
         int y = position.second;
         
@@ -311,40 +311,6 @@ bool Labyrinthe::trouverChemin(
     return backtrackingSequentiel(debut.first, debut.second, fin.first, fin.second, visite, chemin);
 }
 
-// Méthode pour résoudre le trajet principal (D → 1 → T → 2 → A)
-bool Labyrinthe::resoudreTrajetPrincipal(std::vector<std::pair<int, int>>& chemin) {
-    std::vector<std::pair<int, int>> cheminPartiel;
-    chemin.clear();
-    
-    // Étape 1: De D à 1
-    if (!trouverChemin(positionDepart, positionPorte1, cheminPartiel)) {
-        return false;
-    }
-    
-    // Ajouter le chemin partiel au chemin complet
-    chemin.insert(chemin.end(), cheminPartiel.begin(), cheminPartiel.end());
-    
-    // Étape 2: De 1 à 2
-    cheminPartiel.clear();
-    if (!trouverChemin(positionPorte1, positionPorte2, cheminPartiel)) {
-        return false;
-    }
-    
-    // Ajouter le reste du chemin (sans dupliquer la position 1)
-    chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
-    
-    // Étape 3: De 2 à A
-    cheminPartiel.clear();
-    if (!trouverChemin(positionPorte2, positionArrivee, cheminPartiel)) {
-        return false;
-    }
-    
-    // Ajouter le reste du chemin (sans dupliquer la position 2)
-    chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
-    
-    return true;
-}
-
 // Méthode pour collecter les objets dans l'ordre C, B, E
 bool Labyrinthe::collecterObjets(std::vector<std::pair<int, int>>& chemin) {
     std::vector<std::pair<int, int>> cheminPartiel;
@@ -435,25 +401,6 @@ bool Labyrinthe::collecterObjets(std::vector<std::pair<int, int>>& chemin) {
     return true;
 }
 
-// Méthode pour résoudre le labyrinthe complet avec l'ordre D → 1 → T → 2 → A → C → B → E
-bool Labyrinthe::resoudreLabyrintheComplet(std::vector<std::pair<int, int>>& chemin) {
-    chemin.clear();
-    
-    // D'abord le trajet principal D → 1 → T → 2 → A
-    if (!resoudreTrajetPrincipal(chemin)) {
-        std::cout << "Impossible de résoudre le trajet principal (D → 1 → T → 2 → A)" << std::endl;
-        return false;
-    }
-    
-    // Ensuite, collecter les objets A → C → B → E
-    if (!collecterObjets(chemin)) {
-        std::cout << "Impossible de collecter les objets dans l'ordre C, B, E" << std::endl;
-        return false;
-    }
-    
-    return true;
-}
-
 // Méthode pour résoudre le premier labyrinthe (D → 1)
 bool Labyrinthe::resoudreLabyrinthe1(std::vector<std::pair<int, int>>& chemin) {
     return trouverChemin(positionDepart, positionPorte1, chemin);
@@ -526,9 +473,4 @@ bool Labyrinthe::collecterBouclier(std::vector<std::pair<int, int>>& chemin) {
 // Méthode pour collecter l'épée (Porte 1 → E)
 bool Labyrinthe::collecterEpee(std::vector<std::pair<int, int>>& chemin) {
     return trouverChemin(positionPorte1, positionEpee, chemin);
-}
-
-// Méthode originale pour résoudre le chemin complet (pour compatibilité)
-bool Labyrinthe::resoudreLabyrinthes(std::vector<std::pair<int, int>>& chemin) {
-    return resoudreLabyrintheComplet(chemin);
 }

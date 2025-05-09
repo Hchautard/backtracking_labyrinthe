@@ -64,7 +64,7 @@ bool Labyrinthe::backtrackingParalleleBifurcations(
             threads.emplace_back([this, nx, ny, finX, finY, &resultatLocal, &visite, &chemin]() {
 
                 // Copie des structures sinon risque de casser
-                // si passage par référence
+                // si passage par référence dans une notre fonction
                 std::vector<std::vector<bool>> visiteLocale = visite;
                 std::vector<std::pair<int, int>> cheminLocal = chemin;
                 
@@ -81,7 +81,7 @@ bool Labyrinthe::backtrackingParalleleBifurcations(
     }
     
     // Attendre que tous les threads terminent
-    for (auto& t : threads) {
+    for (std::thread& t : threads) {
         t.join();
     }
     

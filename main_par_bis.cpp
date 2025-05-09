@@ -225,7 +225,7 @@ void resolutionDesLabyrinthesParallele(std::vector<Labyrinthe>& labyrinthes) {
     threads.push_back(std::thread(resoudreLabyrinthe3Thread, std::ref(labyrinthes[2])));
     
     // Attendre que tous les threads terminent
-    for (auto& t : threads) {
+    for (std::thread& t : threads) {
         if (t.joinable()) {
             t.join();
         }
@@ -250,7 +250,7 @@ void collectionDesObjetsParallele(std::vector<Labyrinthe>& labyrinthes) {
     threads.push_back(std::thread(collecterEpeeThread, std::ref(labyrinthes[0])));
     
     // Attendre que tous les threads terminent
-    for (auto& t : threads) {
+    for (std::thread& t : threads) {
         if (t.joinable()) {
             t.join();
         }
@@ -273,7 +273,7 @@ void resoudreRetourLabyrinthesParallele(std::vector<Labyrinthe>& labyrinthes) {
     threads.push_back(std::thread(retour2AThread, std::ref(labyrinthes[2])));
     
     // Attendre que tous les threads terminent
-    for (auto& t : threads) {
+    for (std::thread& t : threads) {
         if (t.joinable()) {
             t.join();
         }
