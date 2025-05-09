@@ -24,7 +24,6 @@ Labyrinthe::Labyrinthe(const std::vector<std::string>& grilleLabyrinthe) {
         }
     }
     
-    // Initialiser les positions spéciales
     trouverPositionsSpeciales();
 }
 
@@ -34,7 +33,6 @@ Labyrinthe::Labyrinthe(const std::vector<std::vector<char>>& grilleMatrice) {
     hauteur = grille.size();
     largeur = (hauteur > 0) ? grille[0].size() : 0;
     
-    // Initialiser les positions spéciales
     trouverPositionsSpeciales();
 }
 
@@ -105,7 +103,7 @@ void Labyrinthe::trouverPositionsSpeciales() {
     }
 }
 
-// Méthode pour afficher le labyrinthe
+// Afficher le labyrinthe
 void Labyrinthe::afficher() const {
     for (int i = 0; i < hauteur; ++i) {
         for (int j = 0; j < largeur; ++j) {
@@ -115,7 +113,7 @@ void Labyrinthe::afficher() const {
     }
 }
 
-// Méthode pour afficher le labyrinthe avec le chemin trouvé
+// Afficher le labyrinthe avec le chemin trouvé
 void Labyrinthe::afficherAvecChemin(const std::vector<std::pair<int, int>>& chemin, const bool pathObjectCollect) const {
     // Créer une copie temporaire de la grille
     std::vector<std::vector<char>> grilleTemp = grille;
@@ -167,7 +165,7 @@ void Labyrinthe::afficherAvecChemin(const std::vector<std::pair<int, int>>& chem
     
 }
 
-// Méthode pour charger plusieurs labyrinthes depuis un fichier
+// Charger plusieurs labyrinthes depuis un fichier
 std::vector<Labyrinthe> Labyrinthe::loadFile(const std::string& nomFichier) {
     std::vector<Labyrinthe> labyrinthes;
     std::ifstream fichier(nomFichier);
@@ -181,7 +179,6 @@ std::vector<Labyrinthe> Labyrinthe::loadFile(const std::string& nomFichier) {
     std::string ligne;
     
     while (std::getline(fichier, ligne)) {
-        // Si la ligne est vide et nous avons déjà des données, créer un nouveau labyrinthe
         if (ligne.empty() && !grilleTemp.empty()) {
             labyrinthes.push_back(Labyrinthe(grilleTemp));
             grilleTemp.clear();
@@ -195,7 +192,6 @@ std::vector<Labyrinthe> Labyrinthe::loadFile(const std::string& nomFichier) {
             ligne = ligne.substr(0, tabPos);
         }
         
-        // Ajouter la ligne à la grille temporaire
         if (!ligne.empty()) {
             std::vector<char> ligneCar(ligne.begin(), ligne.end());
             grilleTemp.push_back(ligneCar);
@@ -217,7 +213,9 @@ std::vector<Labyrinthe> Labyrinthe::loadFile(const std::string& nomFichier) {
     
     while (std::getline(fichier, ligne)) {
         // Ignorer les lignes jusqu'au deuxième labyrinthe
-        if (compteurLignes < 21) {  // 20 lignes du premier labyrinthe + 1 ligne vide
+        // 20 lignes du premier labyrinthe + 1 ligne vide
+        // (Oui j'ai compté)
+        if (compteurLignes < 21) { 
             compteurLignes++;
             continue;
         }
@@ -263,7 +261,7 @@ std::vector<Labyrinthe> Labyrinthe::loadFile(const std::string& nomFichier) {
     return labyrinthes;
 }
 
-// Méthode principale de backtracking séquentiel
+// Backtracking séquentiel
 bool Labyrinthe::backtrackingSequentiel(int x, int y, int finX, int finY, 
                                       std::vector<std::vector<bool>>& visite, 
                                       std::vector<std::pair<int, int>>& chemin) {
@@ -281,11 +279,10 @@ bool Labyrinthe::backtrackingSequentiel(int x, int y, int finX, int finY,
         return true;
     }
     
-    // Directions: haut, droite, bas, gauche
+    // Haut, droite, bas, gauche
     const int dx[] = {-1, 0, 1, 0};
     const int dy[] = {0, 1, 0, -1};
     
-    // Explorer les quatre directions
     for (int i = 0; i < 4; ++i) {
         int nx = x + dx[i];
         int ny = y + dy[i];
@@ -311,61 +308,50 @@ bool Labyrinthe::trouverChemin(
     return backtrackingSequentiel(debut.first, debut.second, fin.first, fin.second, visite, chemin);
 }
 
-// Méthode pour collecter les objets dans l'ordre C, B, E
+// Collecter les objets dans l'ordre C, B, E
 bool Labyrinthe::collecterObjets(std::vector<std::pair<int, int>>& chemin) {
     std::vector<std::pair<int, int>> cheminPartiel;
     
-    // On part de la position actuelle (qui devrait être A)
+    // On suppose qu'on part de la position d'arrivée
     std::pair<int, int> positionActuelle = positionArrivee;
     
-    // Étape 1: De A à C (Couronne)
     if (!trouverChemin(positionActuelle, positionCouronne, cheminPartiel)) {
         return false;
     }
     
-    // Ajouter le chemin partiel au chemin complet (sans dupliquer la position actuelle)
     if (!cheminPartiel.empty()) {
         chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
     }
     
-    // Mise à jour de la position actuelle
     positionActuelle = positionCouronne;
     
-    // Étape 2: De C à la porte 2
     cheminPartiel.clear();
     if (!trouverChemin(positionActuelle, positionPorte2, cheminPartiel)) {
         return false;
     }
     
-    // Ajouter le reste du chemin (sans dupliquer la position C)
     if (!cheminPartiel.empty()) {
         chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
     }
     
-    // Mise à jour de la position actuelle
     positionActuelle = positionPorte2;
     
-    // Étape 3: De porte 2 à B (Bouclier)
     cheminPartiel.clear();
     if (!trouverChemin(positionActuelle, positionBouclier, cheminPartiel)) {
         return false;
     }
     
-    // Ajouter le reste du chemin (sans dupliquer la position actuelle)
     if (!cheminPartiel.empty()) {
         chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
     }
     
-    // Mise à jour de la position actuelle
     positionActuelle = positionBouclier;
     
-    // Étape 4: De B à la porte 1
     cheminPartiel.clear();
     if (!trouverChemin(positionActuelle, positionPorte1, cheminPartiel)) {
         return false;
     }
     
-    // Ajouter le reste du chemin (sans dupliquer la position B)
     if (!cheminPartiel.empty()) {
         chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
     }
@@ -373,13 +359,11 @@ bool Labyrinthe::collecterObjets(std::vector<std::pair<int, int>>& chemin) {
     // Mise à jour de la position actuelle
     positionActuelle = positionPorte1;
     
-    // Étape 5: De porte 1 à E (Épée)
     cheminPartiel.clear();
     if (!trouverChemin(positionActuelle, positionEpee, cheminPartiel)) {
         return false;
     }
     
-    // Ajouter le reste du chemin (sans dupliquer la position 1)
     if (!cheminPartiel.empty()) {
         chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
     }
@@ -387,13 +371,11 @@ bool Labyrinthe::collecterObjets(std::vector<std::pair<int, int>>& chemin) {
     // Mise à jour de la position actuelle
     positionActuelle = positionEpee;
     
-    // Étape finale: De E à D (Départ)
     cheminPartiel.clear();
     if (!trouverChemin(positionActuelle, positionDepart, cheminPartiel)) {
         return false;
     }
     
-    // Ajouter le reste du chemin (sans dupliquer la position E)
     if (!cheminPartiel.empty()) {
         chemin.insert(chemin.end(), cheminPartiel.begin() + 1, cheminPartiel.end());
     }
@@ -401,7 +383,7 @@ bool Labyrinthe::collecterObjets(std::vector<std::pair<int, int>>& chemin) {
     return true;
 }
 
-// Méthode pour résoudre le premier labyrinthe (D → 1)
+// Résoudre le premier labyrinthe (D → 1)
 bool Labyrinthe::resoudreLabyrinthe1(std::vector<std::pair<int, int>>& chemin) {
     return trouverChemin(positionDepart, positionPorte1, chemin);
 }
@@ -411,7 +393,7 @@ std::ostream& operator<<(std::ostream& os, const std::pair<int, int>& p) {
     return os;
 }
 
-// Méthode pour résoudre le deuxième labyrinthe (1 → T → 2)
+// Résoudre le deuxième labyrinthe (1 → T → 2)
 bool Labyrinthe::resoudreLabyrinthe2(std::vector<std::pair<int, int>>& chemin) {
     std::vector<std::pair<int, int>> cheminPartiel1;
     std::vector<std::pair<int, int>> cheminPartiel2;
@@ -427,50 +409,46 @@ bool Labyrinthe::resoudreLabyrinthe2(std::vector<std::pair<int, int>>& chemin) {
     // Ajouter le chemin partiel au chemin complet
     chemin = cheminPartiel1;
     
-    // On affiche ce premier chemin
     std::cout << "\nChemin de la porte 1 à T:" << std::endl;
     afficherAvecChemin(cheminPartiel1, false);
     
     return true;
 }
 
-// Ajoutez cette nouvelle méthode pour gérer spécifiquement le labyrinthe2Prime
+// Gérer spécifiquement le labyrinthe2Prime
 bool Labyrinthe::resoudreLabyrinthe2Prime(std::vector<std::pair<int, int>>& chemin) {
     std::vector<std::pair<int, int>> cheminPartiel;
     chemin.clear();
     
-    // Étape 2: De T à 2 dans le labyrinthe prime
     if (!trouverChemin(positionTNT, positionPorte2, cheminPartiel)) {
         std::cout << "Échec: Impossible de trouver un chemin de T à la porte 2" << std::endl;
         return false;
     }
     
-    // Ajouter le chemin
     chemin = cheminPartiel;
     
-    // On affiche ce chemin
     std::cout << "\nChemin de T à la porte 2:" << std::endl;
     afficherAvecChemin(cheminPartiel, false);
     
     return true;
 }
 
-// Méthode pour résoudre le troisième labyrinthe (2 → A)
+// Résoudre le troisième labyrinthe (2 → A)
 bool Labyrinthe::resoudreLabyrinthe3(std::vector<std::pair<int, int>>& chemin) {
     return trouverChemin(positionPorte2, positionArrivee, chemin);
 }
 
-// Méthode pour collecter la couronne (A → C)
+// Collecter la couronne (A → C)
 bool Labyrinthe::collecterCouronne(std::vector<std::pair<int, int>>& chemin) {
     return trouverChemin(positionArrivee, positionCouronne, chemin);
 }
 
-// Méthode pour collecter le bouclier (Porte 2 → B)
+// Collecter le bouclier (Porte 2 → B)
 bool Labyrinthe::collecterBouclier(std::vector<std::pair<int, int>>& chemin) {
     return trouverChemin(positionPorte2, positionBouclier, chemin);
 }
 
-// Méthode pour collecter l'épée (Porte 1 → E)
+// Collecter l'épée (Porte 1 → E)
 bool Labyrinthe::collecterEpee(std::vector<std::pair<int, int>>& chemin) {
     return trouverChemin(positionPorte1, positionEpee, chemin);
 }
